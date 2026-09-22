@@ -148,6 +148,15 @@ The default search window starts **2026-01-01** for both items; pass `--start` t
 - Single public JSON feed, no key required: `https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json`
 - The saved file includes catalog metadata (`catalogVersion`, `dateReleased`, `count`) plus the `vulnerabilities` list.
 
+## Reports
+
+Analysis scripts in `analysis/` generate self-contained HTML reports:
+
+- `analysis/eda_kev.py` &rarr; KEV &times; NVD exploratory analysis (trends, time-to-exploitation stats, filterable tables).
+- `analysis/edgar_dashboard.py` &rarr; SEC 8-K cyber-incident dashboard (incident types, industry, third-party share, narratives).
+
+By default these write into `data/` (gitignored). Shareable snapshots are kept in `reports/`, with `reports/index.html` as a landing page linking both. To refresh the committed snapshots after new data pulls, regenerate the reports and copy the HTML into `reports/`.
+
 ## Extending
 
 To add a new source, create `collectors/<source>.py` with a small client class that reuses `build_session()` from `http_client.py`, then wire a subcommand into `cli.py`.

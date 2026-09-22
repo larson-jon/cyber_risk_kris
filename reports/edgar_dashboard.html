@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEC 8-K Cyber-Incident Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#0f1420; --panel:#1a2233; --ink:#e6ebf5; --muted:#8b98b0; --grid:#2a3550; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+  header { padding:28px 36px 6px; }
+  h1 { margin:0 0 4px; font-size:24px; }
+  .sub { color:var(--muted); font-size:14px; }
+  main { padding:14px 36px 60px; max-width:1280px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:15px; margin:18px 0; }
+  .card { background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:16px 18px; }
+  .card .val { font-size:27px; font-weight:700; }
+  .card .lbl { color:var(--muted); font-size:13px; margin-top:4px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:900px) { .grid2 { grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:18px 20px; margin:18px 0; }
+  .panel h3 { margin:0 0 14px; font-size:16px; }
+  canvas { max-height:300px; }
+  .note { background:#20293d; border-left:3px solid #4f9cf9; border-radius:6px; padding:10px 14px; color:#c7d2e6; font-size:13px; margin:14px 0; }
+  .filters { display:flex; flex-wrap:wrap; gap:12px 14px; align-items:flex-end; background:#141b2a; border:1px solid var(--grid); border-radius:10px; padding:12px 16px; margin-bottom:14px; }
+  .filters label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted); }
+  .filters select, .filters input { background:#0c1019; color:var(--ink); border:1px solid var(--grid); border-radius:6px; padding:6px 8px; font-size:13px; }
+  .filters button { background:#2a3550; color:var(--ink); border:1px solid var(--grid); border-radius:6px; padding:7px 14px; cursor:pointer; }
+  .fcount { color:var(--muted); font-size:13px; margin-left:auto; align-self:center; }
+  .tablewrap { overflow-x:auto; max-height:560px; overflow-y:auto; border:1px solid var(--grid); border-radius:8px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { padding:8px 10px; border-bottom:1px solid var(--grid); text-align:left; vertical-align:top; }
+  thead th { position:sticky; top:0; background:#141b2a; color:var(--muted); font-weight:600; }
+  td.co { font-weight:600; white-space:nowrap; }
+  td.desc { min-width:340px; color:#c7d2e6; }
+  td.ctr { text-align:center; }
+  .pill { padding:1px 8px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
+  .pill.tp { background:#b06cf922; color:#b06cf9; border:1px solid #b06cf955; }
+  a { color:#4f9cf9; }
+</style>
+</head>
+<body>
+<header>
+  <h1>SEC 8-K Cyber-Incident Dashboard</h1>
+  <div class="sub">Source: <code>edgar_8k_item105_20260922T191438Z.csv</code> &middot; material (Item 1.05) &amp; voluntary (Item 8.01) disclosures</div>
+</header>
+<main>
+  <div class="cards">
+    <div class="card"><div class="val">23</div><div class="lbl">Total cyber filings</div></div>
+    <div class="card"><div class="val">23</div><div class="lbl">Item 1.05 (material)</div></div>
+    <div class="card"><div class="val">0</div><div class="lbl">Item 8.01 (voluntary)</div></div>
+    <div class="card"><div class="val">48%</div><div class="lbl">Involved a third party / vendor</div></div>
+  </div>
+
+  <div class="note">
+    <b>What this adds over CVE/KEV:</b> KEV tells you which vulnerabilities are exploited somewhere; this shows
+    which <b>named public companies</b> actually suffered a material incident, in which <b>industries</b>, via what
+    <b>mechanism</b> (notably supply-chain), and where each stands (investigating, contained, litigation).
+    Incident type / third-party / data-type tags are derived from the filing text by keyword rules &mdash; a
+    starting classification, not a substitute for reading the narrative.
+  </div>
+
+  <div class="panel">
+    <h3>Cyber filings by month</h3>
+    <canvas id="trend"></canvas>
+  </div>
+
+  <div class="grid2">
+    <div class="panel"><h3>Incident type</h3><canvas id="itype"></canvas></div>
+    <div class="panel"><h3>Third-party / supply-chain involvement</h3><canvas id="tp"></canvas></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Industry (by SIC)</h3><canvas id="industry"></canvas></div>
+    <div class="panel"><h3>Affected data types</h3><canvas id="dtype"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <h3>Incident filings &mdash; filterable</h3>
+    <div class="filters" id="fbar">
+      <label>Disclosure
+        <select data-f="type"><option value="">All</option><option value="1.05">1.05</option><option value="8.01">8.01</option></select>
+      </label>
+      <label>Incident type <select data-f="itype"><option value="">All</option><option value="Data theft">Data theft</option><option value="Operational disruption">Operational disruption</option><option value="Ransomware">Ransomware</option><option value="Unauthorized access">Unauthorized access</option><option value="Unspecified">Unspecified</option><option value="Vendor / supply-chain">Vendor / supply-chain</option></select></label>
+      <label>Industry <select data-f="industry"><option value="">All</option><option value="Banking &amp; Credit">Banking &amp; Credit</option><option value="Business &amp; IT Services">Business &amp; IT Services</option><option value="Chemicals &amp; Pharma Mfg">Chemicals &amp; Pharma Mfg</option><option value="Communications / Telecom">Communications / Telecom</option><option value="Health Services">Health Services</option><option value="Industrial Machinery Mfg">Industrial Machinery Mfg</option><option value="Instruments &amp; Medical Devices Mfg">Instruments &amp; Medical Devices Mfg</option><option value="Securities &amp; Investments">Securities &amp; Investments</option></select></label>
+      <label>Third party <select data-f="tp"><option value="">All</option><option value="yes">Yes</option><option value="no">No</option></select></label>
+      <label>Month <select data-f="month"><option value="">All</option><option value="2026-02">2026-02</option><option value="2026-03">2026-03</option><option value="2026-04">2026-04</option><option value="2026-05">2026-05</option><option value="2026-06">2026-06</option><option value="2026-07">2026-07</option><option value="2026-08">2026-08</option><option value="2026-09">2026-09</option></select></label>
+      <label>Search <input type="text" data-f="q" placeholder="company or text" style="width:180px"></label>
+      <button type="button" data-f="reset">Reset</button>
+      <span class="fcount"></span>
+    </div>
+    <div class="tablewrap">
+    <table id="ftable">
+      <thead><tr>
+        <th>Date</th><th>Company</th><th>Item</th><th>Incident type</th><th>Industry</th>
+        <th>Vendor</th><th>Data</th><th>Status</th><th>Description</th><th></th>
+      </tr></thead>
+      <tbody><tr class="frow" data-type="1.05" data-itype="Operational disruption" data-industry="Instruments &amp; Medical Devices Mfg" data-tp="yes" data-month="2026-09" data-status="Investigating"><td>2026-09-08</td><td class="co">BOSTON SCIENTIFIC CORP (BSX)</td><td><span class="pill" style="background:#4f9cf922;color:#4f9cf9;border:1px solid #4f9cf955">1.05</span></td><td><span style="color:#4f9cf9">Operational disruption</span></td><td>Instruments &amp; Medical Devices Mfg</td><td class="ctr"><span class="pill tp">Vendor</span></td><td></td><td>Investigating</td><td class="desc">As previously disclosed in a Current Report on Form 8-K filed on August 26, 2026 with the Securities and Exchange Commission, on August 25, 2026, Boston Scientific Corporation (the “ Company ”) identified a cybersecurity incident that affected certain of its information technology systems and resulted in a global disruption to the Company’s operations. Upon detection, the Company activated its inc</td><td><a href="https://www.sec.gov/Archives/edgar/data/885725/000088572526000059/bsx-20260907.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Operational disruption" data-industry="Health Services" data-tp="no" data-month="2026-09" data-status="Investigating"><td>2026-09-01</td><td class="co">Park Dental Partners, Inc. (PARK)</td><td><span class="pill" style="background:#4f9cf922;color:#4f9cf9;border:1px solid #4f9cf955">1.05</span></td><td><span style="color:#4f9cf9">Operational disruption</span></td><td>Health Services</td><td class="ctr">&mdash;</td><td>PHI</td><td>Investigating</td><td class="desc">On August 28, 2026 , Park Dental Partners, Inc. (“we” or the “Company”) identified unauthorized access to its computer network. The Company promptly initiated its incident response protocols, and engaged its external cybersecurity and forensic specialists. The Company is continuing to investigate the nature and scope of this incident, including the scope of any compromise of personal or protected </td><td><a href="https://www.sec.gov/Archives/edgar/data/2069604/000110465926104300/park-20260828x8k.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Unspecified" data-industry="Business &amp; IT Services" data-tp="no" data-month="2026-08" data-status="Reported"><td>2026-08-31</td><td class="co">Nutex Health Inc. (NUTX)</td><td><span class="pill" style="background:#8b98b022;color:#8b98b0;border:1px solid #8b98b055">1.05</span></td><td><span style="color:#8b98b0">Unspecified</span></td><td>Business &amp; IT Services</td><td class="ctr">&mdash;</td><td></td><td>Reported</td><td class="desc">As disclosed in</td><td><a href="https://www.sec.gov/Archives/edgar/data/1479681/000162828026059602/nutx-20260831.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Data theft" data-industry="Chemicals &amp; Pharma Mfg" data-tp="yes" data-month="2026-07" data-status="Investigating"><td>2026-07-31</td><td class="co">AMGEN INC (AMGN)</td><td><span class="pill" style="background:#f9903e22;color:#f9903e;border:1px solid #f9903e55">1.05</span></td><td><span style="color:#f9903e">Data theft</span></td><td>Chemicals &amp; Pharma Mfg</td><td class="ctr"><span class="pill tp">Vendor</span></td><td>PHI</td><td>Investigating</td><td class="desc">In July 2026, Amgen Inc. (the &quot;Company&quot;) identified unauthorized activity involving data stored in cloud environments hosted by third-party cloud service providers. Upon detecting the activity, the Company activated its cybersecurity response plan, implemented containment measures, and engaged independent cybersecurity forensic experts. The Company has since learned that some of its data, includin</td><td><a href="https://www.sec.gov/Archives/edgar/data/318154/000031815426000119/amgn-20260729.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Unauthorized access" data-industry="Banking &amp; Credit" data-tp="no" data-month="2026-07" data-status="Investigating"><td>2026-07-30</td><td class="co">River Financial Corp (RVRF)</td><td><span class="pill" style="background:#5fd08a22;color:#5fd08a;border:1px solid #5fd08a55">1.05</span></td><td><span style="color:#5fd08a">Unauthorized access</span></td><td>Banking &amp; Credit</td><td class="ctr">&mdash;</td><td>PII</td><td>Investigating</td><td class="desc">Since the date of the original filing, River&#x27;s investigation has progressed. River has determined that an unauthorized threat actor accessed portions of its network and removed certain data from its environment. River is working to determine the nature and scope of the information involved, including whether any personally identifiable information was affected. As part of its response, River took </td><td><a href="https://www.sec.gov/Archives/edgar/data/1641601/000119312526325324/ck0001641601-20260619.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Unauthorized access" data-industry="Banking &amp; Credit" data-tp="no" data-month="2026-07" data-status="Litigation"><td>2026-07-17</td><td class="co">River Financial Corp (RVRF)</td><td><span class="pill" style="background:#5fd08a22;color:#5fd08a;border:1px solid #5fd08a55">1.05</span></td><td><span style="color:#5fd08a">Unauthorized access</span></td><td>Banking &amp; Credit</td><td class="ctr">&mdash;</td><td></td><td>Litigation</td><td class="desc">As set forth in its Form 8-K filed July 10, 2026, two class action lawsuits were filed relating to the unauthorized threat actor gaining access to the network environment of River Financial Corporation, including River Bank &amp; Trust (together, “River”). A third class action was filed against River on July 10, 2026 and a fourth class action was filed against River on July 16, 2026. The principal iss</td><td><a href="https://www.sec.gov/Archives/edgar/data/1641601/000119312526307288/ck0001641601-20260619.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Unauthorized access" data-industry="Banking &amp; Credit" data-tp="no" data-month="2026-07" data-status="Litigation"><td>2026-07-10</td><td class="co">River Financial Corp (RVRF)</td><td><span class="pill" style="background:#5fd08a22;color:#5fd08a;border:1px solid #5fd08a55">1.05</span></td><td><span style="color:#5fd08a">Unauthorized access</span></td><td>Banking &amp; Credit</td><td class="ctr">&mdash;</td><td>PII</td><td>Litigation</td><td class="desc">Since the date of the original filing, River&#x27;s investigation has progressed. River has determined that an unauthorized threat actor accessed portions of its network and removed certain data from its environment. River is working to determine the nature and scope of the information involved, including whether any personally identifiable information was affected. To date, River is not aware of any r</td><td><a href="https://www.sec.gov/Archives/edgar/data/1641601/000119312526300763/ck0001641601-20260619.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Unspecified" data-industry="Banking &amp; Credit" data-tp="no" data-month="2026-07" data-status="Investigating"><td>2026-07-06</td><td class="co">River Financial Corp (RVRF)</td><td><span class="pill" style="background:#8b98b022;color:#8b98b0;border:1px solid #8b98b055">1.05</span></td><td><span style="color:#8b98b0">Unspecified</span></td><td>Banking &amp; Credit</td><td class="ctr">&mdash;</td><td>PII</td><td>Investigating</td><td class="desc">Since the date of the original filing, River’s investigation has progressed. River has reason to believe that certain data was potentially impacted and is working to determine the nature and scope of the information involved, including whether any personally identifiable information was affected. To date, there is no evidence that accounts have been impacted. As of the date of this filing, the ful</td><td><a href="https://www.sec.gov/Archives/edgar/data/1641601/000119312526295704/ck0001641601-20260619.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Data theft" data-industry="Health Services" data-tp="yes" data-month="2026-07" data-status="Investigating"><td>2026-07-02</td><td class="co">AdaptHealth Corp. (AHCO)</td><td><span class="pill" style="background:#f9903e22;color:#f9903e;border:1px solid #f9903e55">1.05</span></td><td><span style="color:#f9903e">Data theft</span></td><td>Health Services</td><td class="ctr"><span class="pill tp">Vendor</span></td><td>PHI; PII; Financial</td><td>Investigating</td><td class="desc">AdaptHealth Corp. (the “Company”) is investigating a security incident whereby a threat actor gained unauthorized access to Company systems and exfiltrated certain data therefrom. Upon learning of the incident, the Company promptly activated its incident response procedures, launched the investigation with the support of external advisors and cybersecurity experts to assess and contain the threat </td><td><a href="https://www.sec.gov/Archives/edgar/data/1725255/000110465926080297/ahco-20260627x8k.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Ransomware" data-industry="Securities &amp; Investments" data-tp="no" data-month="2026-07" data-status="Investigating"><td>2026-07-02</td><td class="co">NAVIENT CORP (JSM, NAVI)</td><td><span class="pill" style="background:#f9536b22;color:#f9536b;border:1px solid #f9536b55">1.05</span></td><td><span style="color:#f9536b">Ransomware</span></td><td>Securities &amp; Investments</td><td class="ctr">&mdash;</td><td></td><td>Investigating</td><td class="desc">On June 8, 2026, the Company became aware of a cybersecurity incident involving a third‑party law firm (the “Firm”) that provides services to the Company. The incident involved a ransomware attack affecting certain of the Firm’s information systems. The Company was informed by the Firm that an unauthorized actor accessed certain Company-related data maintained by the Firm as a result of the Firm’s</td><td><a href="https://www.sec.gov/Archives/edgar/data/1593538/000114036126027441/ef20077249_8k.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Ransomware" data-industry="Banking &amp; Credit" data-tp="yes" data-month="2026-06" data-status="Investigating"><td>2026-06-25</td><td class="co">River Financial Corp (RVRF)</td><td><span class="pill" style="background:#f9536b22;color:#f9536b;border:1px solid #f9536b55">1.05</span></td><td><span style="color:#f9536b">Ransomware</span></td><td>Banking &amp; Credit</td><td class="ctr"><span class="pill tp">Vendor</span></td><td>PII</td><td>Investigating</td><td class="desc">On or about June 16, 2026, an unauthorized threat actor gained access to the network environment of River Financial Corporation, including River Bank &amp; Trust (together, “River”). River identified the activity on or about June 19, 2026, and determined that ransomware had been deployed across portions of its server environment. River promptly took containment measures, including disabling affected a</td><td><a href="https://www.sec.gov/Archives/edgar/data/1641601/000119312526282946/ck0001641601-20260619.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Data theft" data-industry="Business &amp; IT Services" data-tp="yes" data-month="2026-06" data-status="Contained / restored"><td>2026-06-23</td><td class="co">8X8 INC /DE/ (EGHT)</td><td><span class="pill" style="background:#f9903e22;color:#f9903e;border:1px solid #f9903e55">1.05</span></td><td><span style="color:#f9903e">Data theft</span></td><td>Business &amp; IT Services</td><td class="ctr"><span class="pill tp">Vendor</span></td><td></td><td>Contained / restored</td><td class="desc">Material Cyber Security Incident. On June 13, 2026, 8x8, Inc. (the “ Company ” or “ we” ) was informed that an unauthorized third party threat actor exploited the Klue Labs, Inc. (“ Klue ”) third-party application programming integration connected to the Company&#x27;s Salesforce, Inc. (“ Salesforce ”) customer relationship management system. The threat actor gained unauthorized access and exfiltrated </td><td><a href="https://www.sec.gov/Archives/edgar/data/1023731/000102373126000084/eght-20260617.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Data theft" data-industry="Instruments &amp; Medical Devices Mfg" data-tp="yes" data-month="2026-06" data-status="Investigating"><td>2026-06-15</td><td class="co">iRhythm Holdings, Inc. (IRTC)</td><td><span class="pill" style="background:#f9903e22;color:#f9903e;border:1px solid #f9903e55">1.05</span></td><td><span style="color:#f9903e">Data theft</span></td><td>Instruments &amp; Medical Devices Mfg</td><td class="ctr"><span class="pill tp">Vendor</span></td><td>PHI; PII; Financial</td><td>Investigating</td><td class="desc">On June 8, 2026, iRhythm Holdings, Inc. (the “Company”) identified unauthorized activity involving data maintained on certain third-party-hosted business applications. The Company promptly activated its cybersecurity response plan and launched an investigation with the support of external advisors and cybersecurity experts to assess and contain the threat. On June 9, 2026, the Company received com</td><td><a href="https://www.sec.gov/Archives/edgar/data/1388658/000138865826000055/irtc-20260610.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Unspecified" data-industry="Health Services" data-tp="no" data-month="2026-05" data-status="Reported"><td>2026-05-22</td><td class="co">Oncology Institute, Inc. (TOI, DFPH, TOIIW)</td><td><span class="pill" style="background:#8b98b022;color:#8b98b0;border:1px solid #8b98b055">1.05</span></td><td><span style="color:#8b98b0">Unspecified</span></td><td>Health Services</td><td class="ctr">&mdash;</td><td></td><td>Reported</td><td class="desc">The Oncology Institute, Inc. (the “Company”) is providing this disclosure, as a follow-up to its voluntary disclosure in</td><td><a href="https://www.sec.gov/Archives/edgar/data/1799191/000107997326000721/toi_8k.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Vendor / supply-chain" data-industry="Instruments &amp; Medical Devices Mfg" data-tp="yes" data-month="2026-05" data-status="Litigation"><td>2026-05-20</td><td class="co">WEST PHARMACEUTICAL SERVICES INC (WST)</td><td><span class="pill" style="background:#b06cf922;color:#b06cf9;border:1px solid #b06cf955">1.05</span></td><td><span style="color:#b06cf9">Vendor / supply-chain</span></td><td>Instruments &amp; Medical Devices Mfg</td><td class="ctr"><span class="pill tp">Vendor</span></td><td></td><td>Litigation</td><td class="desc">As previously disclosed in the Original Report, the Company determined on May 7, 2026 that the Company had experienced a material cybersecurity attack, in which certain data was exfiltrated by an unauthorized party and certain systems were encrypted. Upon initial detection of an intrusion on May 4, 2026, the Company promptly activated its incident response protocols, including proactively taking s</td><td><a href="https://www.sec.gov/Archives/edgar/data/105770/000010577026000077/wst-20260507.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Operational disruption" data-industry="Banking &amp; Credit" data-tp="no" data-month="2026-05" data-status="Contained / restored"><td>2026-05-11</td><td class="co">CB Financial Services, Inc. (CBFV)</td><td><span class="pill" style="background:#4f9cf922;color:#4f9cf9;border:1px solid #4f9cf955">1.05</span></td><td><span style="color:#4f9cf9">Operational disruption</span></td><td>Banking &amp; Credit</td><td class="ctr">&mdash;</td><td></td><td>Contained / restored</td><td class="desc">On May 5, 2026, Community Bank (the “Bank”), the wholly-owned subsidiary of CB Financial Services, Inc. (the “Company”), became aware of an internal incident involving the handling of certain non‑public customer information using an unauthorized artificial intelligence-based software application. Upon discovery, the Bank promptly took steps to secure the information at issue and initiated an inter</td><td><a href="https://www.sec.gov/Archives/edgar/data/1605301/000160530126000021/cbfv-20260507.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Data theft" data-industry="Instruments &amp; Medical Devices Mfg" data-tp="no" data-month="2026-05" data-status="Litigation"><td>2026-05-11</td><td class="co">WEST PHARMACEUTICAL SERVICES INC (WST)</td><td><span class="pill" style="background:#f9903e22;color:#f9903e;border:1px solid #f9903e55">1.05</span></td><td><span style="color:#f9903e">Data theft</span></td><td>Instruments &amp; Medical Devices Mfg</td><td class="ctr">&mdash;</td><td></td><td>Litigation</td><td class="desc">On May 7, 2026, West Pharmaceutical Services, Inc. (the “Company”) determined that the Company has experienced a material cybersecurity attack, in which certain data was exfiltrated by an unauthorized party and certain systems were encrypted. Upon initial detection of an intrusion on May 4, 2026, the Company promptly activated its incident response protocols, including proactively taking systems o</td><td><a href="https://www.sec.gov/Archives/edgar/data/105770/000010577026000068/wst-20260507.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Unspecified" data-industry="Instruments &amp; Medical Devices Mfg" data-tp="no" data-month="2026-04" data-status="Reported"><td>2026-04-09</td><td class="co">STRYKER CORP (SYK)</td><td><span class="pill" style="background:#8b98b022;color:#8b98b0;border:1px solid #8b98b055">1.05</span></td><td><span style="color:#8b98b0">Unspecified</span></td><td>Instruments &amp; Medical Devices Mfg</td><td class="ctr">&mdash;</td><td></td><td>Reported</td><td class="desc">As previously disclosed in the Original Report and as further reported on two</td><td><a href="https://www.sec.gov/Archives/edgar/data/310764/000119312526149607/d112875d8ka.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Data theft" data-industry="Banking &amp; Credit" data-tp="yes" data-month="2026-04" data-status="Contained / restored"><td>2026-04-08</td><td class="co">Bitcoin Depot Inc. (BTM, BTMWW)</td><td><span class="pill" style="background:#f9903e22;color:#f9903e;border:1px solid #f9903e55">1.05</span></td><td><span style="color:#f9903e">Data theft</span></td><td>Banking &amp; Credit</td><td class="ctr"><span class="pill tp">Vendor</span></td><td>PII</td><td>Contained / restored</td><td class="desc">On March 23, 2026, Bitcoin Depot Inc. (the “Company”) discovered that an unauthorized party gained access to certain of its information technology systems. Upon detection, the Company promptly activated its incident response protocols, engaged external cybersecurity experts, and notified law enforcement. Based on the Company’s investigation to date, the unauthorized actor gained access to certain </td><td><a href="https://www.sec.gov/Archives/edgar/data/1901799/000119312526147772/btm-20260406.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Data theft" data-industry="Business &amp; IT Services" data-tp="yes" data-month="2026-03" data-status="Contained / restored"><td>2026-03-27</td><td class="co">CareCloud, Inc. (CCLD, CCLDO)</td><td><span class="pill" style="background:#f9903e22;color:#f9903e;border:1px solid #f9903e55">1.05</span></td><td><span style="color:#f9903e">Data theft</span></td><td>Business &amp; IT Services</td><td class="ctr"><span class="pill tp">Vendor</span></td><td></td><td>Contained / restored</td><td class="desc">On March 16, 2026, CareCloud, Inc. (the “Company”) experienced a temporary network disruption in its CareCloud Health division that partially impacted the functionality and data access to 1 of its 6 electronic health record environments for approximately 8 hours until the Company fully restored all functionality and data access during that evening. Upon discovery of this incident, the Company prom</td><td><a href="https://www.sec.gov/Archives/edgar/data/1582982/000149315226013239/form8-k.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Ransomware" data-industry="Industrial Machinery Mfg" data-tp="yes" data-month="2026-03" data-status="Contained / restored"><td>2026-03-20</td><td class="co">TRIO-TECH INTERNATIONAL (TRT)</td><td><span class="pill" style="background:#f9536b22;color:#f9536b;border:1px solid #f9536b55">1.05</span></td><td><span style="color:#f9536b">Ransomware</span></td><td>Industrial Machinery Mfg</td><td class="ctr"><span class="pill tp">Vendor</span></td><td></td><td>Contained / restored</td><td class="desc">On March 11, 2026, Trio-Tech International (“Company”) identified and responded to a cybersecurity incident in one of its subsidiaries (“subsidiary”) in Singapore. The subsidiary experienced a ransomware incident that resulted in encryption of certain files within the Company’s network. At that time, management determined that the incident was not material. On March 18, 2026, the incident escalate</td><td><a href="https://www.sec.gov/Archives/edgar/data/732026/000143774926009193/trt20260320_8k.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Data theft" data-industry="Instruments &amp; Medical Devices Mfg" data-tp="yes" data-month="2026-02" data-status="Contained / restored"><td>2026-02-24</td><td class="co">UFP TECHNOLOGIES INC (UFPT)</td><td><span class="pill" style="background:#f9903e22;color:#f9903e;border:1px solid #f9903e55">1.05</span></td><td><span style="color:#f9903e">Data theft</span></td><td>Instruments &amp; Medical Devices Mfg</td><td class="ctr"><span class="pill tp">Vendor</span></td><td>PII</td><td>Contained / restored</td><td class="desc">On or about February 14, 2026, UFP Technologies, Inc. (the “Company”) detected suspicious activity involving its information technology (“IT”) systems. Upon detecting the issue, the Company began taking steps to assess, contain, and remediate the unauthorized activity, including isolating the affected systems and launching an investigation with the assistance of external cybersecurity advisors. Th</td><td><a href="https://www.sec.gov/Archives/edgar/data/914156/000162828026011152/ufpt-20260219.htm" target="_blank">filing</a></td></tr>
+<tr class="frow" data-type="1.05" data-itype="Unspecified" data-industry="Communications / Telecom" data-tp="no" data-month="2026-02" data-status="Contained / restored"><td>2026-02-03</td><td class="co">WYTEC INTERNATIONAL INC (WYTC)</td><td><span class="pill" style="background:#8b98b022;color:#8b98b0;border:1px solid #8b98b055">1.05</span></td><td><span style="color:#8b98b0">Unspecified</span></td><td>Communications / Telecom</td><td class="ctr">&mdash;</td><td></td><td>Contained / restored</td><td class="desc">As disclosed in a Current Report on Form 8-K (the “Original Report”), on August 25, 2025, Wytec International, Inc. (the “Company”) became aware of a cybersecurity incident in which a bad actor published a defaced website at the Company’s web address, wytecintl.com. After the Company restored the website from back-ups, the bad actor was able to deface the website again. To date the Company has rec</td><td><a href="https://www.sec.gov/Archives/edgar/data/1560143/000168316826000732/wytec_8ka1.htm" target="_blank">filing</a></td></tr></tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="foot" style="color:var(--muted);font-size:12px;margin-top:24px">
+    Generated by <code>analysis/edgar_dashboard.py</code>. Tags are keyword-derived from filing text.
+  </div>
+</main>
+<script>
+const C = {"monthsLabels": ["2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"], "monthly105": [2, 2, 2, 4, 3, 7, 1, 2], "monthly801": [0, 0, 0, 0, 0, 0, 0, 0], "industryLabels": ["Banking & Credit", "Instruments & Medical Devices Mfg", "Business & IT Services", "Health Services", "Chemicals & Pharma Mfg", "Communications / Telecom", "Industrial Machinery Mfg", "Securities & Investments"], "industryData": [7, 6, 3, 3, 1, 1, 1, 1], "typeLabels": ["Data theft", "Unspecified", "Operational disruption", "Ransomware", "Unauthorized access", "Vendor / supply-chain"], "typeData": [8, 5, 3, 3, 3, 1], "typeColors": ["#f9903e", "#8b98b0", "#4f9cf9", "#f9536b", "#5fd08a", "#b06cf9"], "dataTypeLabels": ["PII", "PHI", "Financial"], "dataTypeData": [8, 4, 2], "tpYes": 11, "tpNo": 12};
+const grid="#2a3550", muted="#8b98b0";
+Chart.defaults.color = muted;
+Chart.defaults.font.family = "Segoe UI, system-ui, sans-serif";
+
+new Chart(document.getElementById('trend'), {
+  type:'bar',
+  data:{ labels:C.monthsLabels, datasets:[
+    { label:'Item 1.05 (material)', data:C.monthly105, backgroundColor:'#f9536b' },
+    { label:'Item 8.01 (voluntary)', data:C.monthly801, backgroundColor:'#4f9cf9' }
+  ]},
+  options:{ responsive:true, scales:{ x:{stacked:true,grid:{color:grid}}, y:{stacked:true,beginAtZero:true,grid:{color:grid}} },
+    plugins:{ legend:{position:'bottom'} } }
+});
+
+new Chart(document.getElementById('itype'), {
+  type:'bar',
+  data:{ labels:C.typeLabels, datasets:[{ data:C.typeData, backgroundColor:C.typeColors }]},
+  options:{ indexAxis:'y', responsive:true, plugins:{legend:{display:false}},
+    scales:{ x:{beginAtZero:true,grid:{color:grid}}, y:{grid:{color:grid}} } }
+});
+
+new Chart(document.getElementById('tp'), {
+  type:'doughnut',
+  data:{ labels:['Third-party / vendor','Direct'], datasets:[{ data:[C.tpYes,C.tpNo], backgroundColor:['#b06cf9','#4f9cf9'] }]},
+  options:{ responsive:true, plugins:{legend:{position:'bottom'}} }
+});
+
+new Chart(document.getElementById('industry'), {
+  type:'bar',
+  data:{ labels:C.industryLabels, datasets:[{ data:C.industryData, backgroundColor:'#5fd08a' }]},
+  options:{ indexAxis:'y', responsive:true, plugins:{legend:{display:false}},
+    scales:{ x:{beginAtZero:true,grid:{color:grid}}, y:{grid:{color:grid}} } }
+});
+
+new Chart(document.getElementById('dtype'), {
+  type:'bar',
+  data:{ labels:C.dataTypeLabels, datasets:[{ data:C.dataTypeData, backgroundColor:'#f9903e' }]},
+  options:{ responsive:true, plugins:{legend:{display:false}},
+    scales:{ x:{grid:{color:grid}}, y:{beginAtZero:true,grid:{color:grid}} } }
+});
+
+// --- table filtering ---
+(function() {
+  const bar = document.getElementById('fbar');
+  const rows = Array.from(document.querySelectorAll('#ftable tbody tr'));
+  const countEl = bar.querySelector('.fcount');
+  function val(n) { const e = bar.querySelector('[data-f="'+n+'"]'); return e ? e.value.trim().toLowerCase() : ""; }
+  function apply() {
+    const ft=val('type'), fi=val('itype'), fin=val('industry'), ftp=val('tp'), fm=val('month'), fq=val('q');
+    let shown=0;
+    rows.forEach(function(r) {
+      let ok=true;
+      if (ft && r.dataset.type.toLowerCase()!==ft) ok=false;
+      if (fi && r.dataset.itype.toLowerCase()!==fi) ok=false;
+      if (fin && r.dataset.industry.toLowerCase()!==fin) ok=false;
+      if (ftp && r.dataset.tp!==ftp) ok=false;
+      if (fm && r.dataset.month!==fm) ok=false;
+      if (fq && r.textContent.toLowerCase().indexOf(fq)===-1) ok=false;
+      r.style.display = ok ? "" : "none";
+      if (ok) shown++;
+    });
+    countEl.textContent = shown+" of "+rows.length+" shown";
+  }
+  bar.querySelectorAll('[data-f]').forEach(function(c) {
+    if (c.dataset.f==='reset') c.addEventListener('click', function() {
+      bar.querySelectorAll('select').forEach(s=>s.value=""); bar.querySelectorAll('input').forEach(i=>i.value=""); apply();
+    });
+    else { c.addEventListener('input', apply); c.addEventListener('change', apply); }
+  });
+  apply();
+})();
+</script>
+</body>
+</html>

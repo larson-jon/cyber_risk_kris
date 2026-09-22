@@ -22,17 +22,27 @@ from pathlib import Path
 DATA_DIR = Path("data")
 
 
-def _latest_edgar() -> Path:
-    files = sorted(glob.glob(str(DATA_DIR / "edgar_8k_cyber_*.csv")))
-    if not files:
-        # Fall back to single-item exports if the combined file isn't present.
-        files = sorted(glob.glob(str(DATA_DIR / "edgar_8k_*.csv")))
+def _latest_edgar(explicit: str | None = None) -> Path:
+    """Return the EDGAR CSV to use.
+
+    If ``explicit`` is given (or passed on the command line), use it. Otherwise
+    pick the most recently modified ``edgar_8k_*.csv`` in data/ &mdash; this
+    covers both the combined ``edgar_8k_cyber_*`` and single-item
+    ``edgar_8k_item105_*`` / ``edgar_8k_item801_*`` exports.
+    """
+    if explicit:
+        p = Path(explicit)
+        if not p.exists():
+            raise SystemExit(f"File not found: {explicit}")
+        return p
+    files = glob.glob(str(DATA_DIR / "edgar_8k_*.csv"))
     if not files:
         raise SystemExit(
             "No edgar_8k_*.csv found in data/. Run: "
-            "python -m collectors.cli edgar --item both"
+            "python -m collectors.cli edgar --item 1.05"
         )
-    return Path(files[-1])
+    # Most recently modified wins.
+    return Path(max(files, key=lambda f: Path(f).stat().st_mtime))
 
 
 def load_rows(path: Path) -> list[dict]:
@@ -355,8 +365,8 @@ new Chart(document.getElementById('dtype'), {{
 """
 
 
-def write_dashboard() -> Path:
-    src = _latest_edgar()
+def write_dashboard(explicit: str | None = None) -> tuple[Path, dict]:
+    src = _latest_edgar(explicit)
     rows = load_rows(src)
     agg = compute(rows)
     out = DATA_DIR / "edgar_dashboard.html"
@@ -365,7 +375,10 @@ def write_dashboard() -> Path:
 
 
 if __name__ == "__main__":
-    out, agg = write_dashboard()
+    import sys
+
+    arg = sys.argv[1] if len(sys.argv) > 1 else None
+    out, agg = write_dashboard(arg)
     print(f"Rows: {agg['total']}  (1.05={agg['count_105']}, 8.01={agg['count_801']})")
     print("Top industries:", agg["industries"][:5])
     print("Incident types:", agg["incident_types"])
