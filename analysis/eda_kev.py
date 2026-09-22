@@ -358,8 +358,11 @@ def _year_section(res: dict) -> str:
       <div class="tablewrap">
       <table class="detail" id="table{year}">
         <thead><tr>
-          <th>CVE</th><th>Added</th><th>Published</th><th class="num">Age (d)</th>
-          <th>Severity</th><th class="num">CVSS</th><th>Ransom</th><th>Vendor / Product</th><th>Description</th>
+          <th>CVE</th><th>Added</th><th>Published</th>
+          <th class="num">{fb.info("Age (d)", "Days between NVD publication (first captured) and the date CISA added the CVE to KEV (exploited). Negative means exploited before it was published.")}</th>
+          <th>{fb.info("Severity", "NVD's CVSS severity band: Critical (9.0-10), High (7.0-8.9), Medium (4.0-6.9), Low (0.1-3.9).")}</th>
+          <th class="num">{fb.info("CVSS", "Common Vulnerability Scoring System base score, 0-10. Rates how severe a vulnerability is from exploitability and impact. Higher = more dangerous. From the best available NVD metric (v4.0 &gt; v3.1 &gt; v3.0 &gt; v2).")}</th>
+          <th>Ransom</th><th>Vendor / Product</th><th>Description</th>
         </tr></thead>
         <tbody>{detail_rows}</tbody>
       </table>
@@ -428,9 +431,13 @@ def _age_stats_section(series: list[dict], trend: dict, annual: dict) -> str:
       <div class="tablewrap">
       <table class="detail">
         <thead><tr>
-          <th>Month</th><th class="num">n</th><th class="num">Min</th>
-          <th class="num">Max</th><th class="num">Mean</th><th class="num">Median</th>
-          <th class="num" title="Records added to KEV on or before NVD publication (age &le; 0)">Zero-day (&le;0)</th>
+          <th>Month</th>
+          <th class="num">{fb.info("n", "Number of KEV entries added that month that also have an NVD publication date, so an age could be computed.")}</th>
+          <th class="num">Min</th>
+          <th class="num">Max</th>
+          <th class="num">{fb.info("Mean", "Average days from NVD publication to KEV listing. Skewed upward by a few very old CVEs newly exploited, so it runs far above the median.")}</th>
+          <th class="num">{fb.info("Median", "The middle value of days-to-exploitation for that month. More representative of the typical case than the mean; the preferred KRI.")}</th>
+          <th class="num">{fb.info("Zero-day (&le;0)", "Count of entries added to CISA KEV on or before the CVE was published in NVD (age of 0 or negative) - i.e. exploited at or before public disclosure. A strong zero-day signal.")}</th>
         </tr></thead>
         <tbody>{rows_html}</tbody>
       </table>

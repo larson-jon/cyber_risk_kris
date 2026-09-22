@@ -210,7 +210,7 @@ def render(rows: list[dict], agg: dict, source_name: str) -> str:
 <main>
   <div class="cards">
     <div class="card"><div class="val">{agg['count_105']}</div><div class="lbl">Item 1.05 material incidents</div></div>
-    <div class="card"><div class="val">{tp_pct}%</div><div class="lbl">Involved a third party / vendor</div></div>
+    <div class="card"><div class="val">{tp_pct}%</div><div class="lbl">{fb.info("Involved a third party / vendor", "Share of filings whose narrative indicates a third-party or supply-chain vendor was involved in the incident (keyword-derived).")}</div></div>
   </div>
 
   <div class="note">
@@ -249,8 +249,13 @@ def render(rows: list[dict], agg: dict, source_name: str) -> str:
     <div class="tablewrap">
     <table id="ftable">
       <thead><tr>
-        <th>Date</th><th>Company</th><th>Incident type</th><th>Industry</th>
-        <th>Vendor</th><th>Data</th><th>Status</th><th>Description</th><th></th>
+        <th>Date</th><th>Company</th>
+        <th>{fb.info("Incident type", "Primary category inferred from the filing narrative by keyword rules: Ransomware, Vendor / supply-chain, Data theft, Operational disruption, or Unauthorized access.")}</th>
+        <th>{fb.info("Industry", "Company's industry, derived from its SIC (Standard Industrial Classification) code in the EDGAR filing.")}</th>
+        <th>{fb.info("Vendor", "Flagged when the filing indicates a third-party / supply-chain vendor was involved in the incident.")}</th>
+        <th>{fb.info("Data", "Types of data the narrative indicates were affected: PII (personal), PHI (health), or Financial.")}</th>
+        <th>{fb.info("Status", "Where the disclosure stands, inferred from the text: Investigating, Contained / restored, Litigation, or Reported.")}</th>
+        <th>Description</th><th></th>
       </tr></thead>
       <tbody>{table_rows}</tbody>
     </table>

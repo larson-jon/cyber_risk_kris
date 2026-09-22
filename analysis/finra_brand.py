@@ -104,13 +104,45 @@ def base_css() -> str:
   .fcount {{ color:var(--muted); font-size:13px; margin-left:auto; align-self:center; }}
   .foot {{ color:var(--muted); font-size:12px; margin-top:30px; border-top:1px solid var(--line); padding-top:14px; }}
   code {{ background:#eef1f5; padding:1px 6px; border-radius:4px; font-size:.92em; }}
-"""
+""" + _TOOLTIP_CSS
 
 
 # Official FINRA Enterprise Risk Management logo, expected alongside each report
 # (copied into both data/ and reports/). It is the black version, so it sits on
 # a white band per brand guidance (logo must be white/reversed on dark).
 LOGO_FILE = "finra%20logo.png"
+
+
+def info(label: str, definition: str) -> str:
+    """Return ``label`` followed by an (i) marker with a hover tooltip.
+
+    Works in table headers and inline text. Uses a CSS-only tooltip (no JS) so it
+    functions in any static HTML context.
+    """
+    import html as _html
+
+    return (
+        f'{label} <span class="info" tabindex="0" aria-label="{_html.escape(definition)}">'
+        f'i<span class="tip">{_html.escape(definition)}</span></span>'
+    )
+
+
+# CSS for the info tooltip -- appended into base_css().
+_TOOLTIP_CSS = """
+  .info {{ display:inline-flex; align-items:center; justify-content:center;
+    width:14px; height:14px; border-radius:50%; background:{accent}; color:#fff;
+    font-size:9px; font-weight:700; font-style:normal; cursor:help; margin-left:4px;
+    vertical-align:middle; position:relative; font-family:'Open Sans',sans-serif; }}
+  .info .tip {{ visibility:hidden; opacity:0; position:absolute; z-index:20;
+    bottom:150%; left:50%; transform:translateX(-50%); width:250px;
+    background:{core}; color:#fff; text-align:left; font-weight:400; font-size:12px;
+    line-height:1.45; padding:9px 11px; border-radius:6px; box-shadow:0 4px 14px rgba(16,36,66,.25);
+    transition:opacity .12s; pointer-events:none; white-space:normal; text-transform:none; }}
+  .info .tip::after {{ content:""; position:absolute; top:100%; left:50%; margin-left:-5px;
+    border:5px solid transparent; border-top-color:{core}; }}
+  .info:hover .tip, .info:focus .tip {{ visibility:visible; opacity:1; }}
+  thead th .info .tip {{ font-weight:400; }}
+""".format(accent=ACCENT_BLUE, core=CORE_BLUE)
 
 
 def brand_header(title: str, subtitle: str = "", tagline: bool = True) -> str:
