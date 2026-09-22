@@ -16,8 +16,12 @@ import csv
 import glob
 import html
 import json
+import sys
 from collections import Counter
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import finra_brand as fb  # noqa: E402
 
 DATA_DIR = Path("data")
 
@@ -110,13 +114,14 @@ def compute(rows: list[dict]) -> dict:
 # HTML rendering
 # ---------------------------------------------------------------------------
 
+# Incident-type palette mapped onto FINRA brand colors.
 _TYPE_COLORS = {
-    "Ransomware": "#f9536b",
-    "Vendor / supply-chain": "#b06cf9",
-    "Data theft": "#f9903e",
-    "Operational disruption": "#4f9cf9",
-    "Unauthorized access": "#5fd08a",
-    "Unspecified": "#8b98b0",
+    "Ransomware": fb.ACCENT_RED,
+    "Vendor / supply-chain": fb.CORE_BLUE,
+    "Data theft": "#f2872f",           # warm orange bridge
+    "Operational disruption": fb.ACCENT_BLUE,
+    "Unauthorized access": fb.ACCENT_GREEN,
+    "Unspecified": fb.ACCENT_GRAY,
 }
 
 
@@ -185,48 +190,25 @@ def render(rows: list[dict], agg: dict, source_name: str) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SEC 8-K Cyber-Incident Dashboard</title>
+<title>SEC 8-K Cyber-Incident Dashboard | FINRA</title>
+{fb.FONT_IMPORT}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  :root {{ --bg:#0f1420; --panel:#1a2233; --ink:#e6ebf5; --muted:#8b98b0; --grid:#2a3550; }}
-  * {{ box-sizing:border-box; }}
-  body {{ margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif; }}
-  header {{ padding:28px 36px 6px; }}
-  h1 {{ margin:0 0 4px; font-size:24px; }}
-  .sub {{ color:var(--muted); font-size:14px; }}
-  main {{ padding:14px 36px 60px; max-width:1280px; }}
-  .cards {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:15px; margin:18px 0; }}
-  .card {{ background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:16px 18px; }}
-  .card .val {{ font-size:27px; font-weight:700; }}
-  .card .lbl {{ color:var(--muted); font-size:13px; margin-top:4px; }}
+{fb.base_css()}
   .grid2 {{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }}
   @media (max-width:900px) {{ .grid2 {{ grid-template-columns:1fr; }} }}
-  .panel {{ background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:18px 20px; margin:18px 0; }}
-  .panel h3 {{ margin:0 0 14px; font-size:16px; }}
-  canvas {{ max-height:300px; }}
-  .note {{ background:#20293d; border-left:3px solid #4f9cf9; border-radius:6px; padding:10px 14px; color:#c7d2e6; font-size:13px; margin:14px 0; }}
-  .filters {{ display:flex; flex-wrap:wrap; gap:12px 14px; align-items:flex-end; background:#141b2a; border:1px solid var(--grid); border-radius:10px; padding:12px 16px; margin-bottom:14px; }}
-  .filters label {{ display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted); }}
-  .filters select, .filters input {{ background:#0c1019; color:var(--ink); border:1px solid var(--grid); border-radius:6px; padding:6px 8px; font-size:13px; }}
-  .filters button {{ background:#2a3550; color:var(--ink); border:1px solid var(--grid); border-radius:6px; padding:7px 14px; cursor:pointer; }}
-  .fcount {{ color:var(--muted); font-size:13px; margin-left:auto; align-self:center; }}
-  .tablewrap {{ overflow-x:auto; max-height:560px; overflow-y:auto; border:1px solid var(--grid); border-radius:8px; }}
-  table {{ width:100%; border-collapse:collapse; font-size:13px; }}
-  th,td {{ padding:8px 10px; border-bottom:1px solid var(--grid); text-align:left; vertical-align:top; }}
-  thead th {{ position:sticky; top:0; background:#141b2a; color:var(--muted); font-weight:600; }}
-  td.co {{ font-weight:600; white-space:nowrap; }}
-  td.desc {{ min-width:340px; color:#c7d2e6; }}
+  td.co {{ font-weight:700; white-space:nowrap; color:var(--core); }}
+  td.desc {{ min-width:340px; color:var(--body); }}
   td.ctr {{ text-align:center; }}
-  .pill {{ padding:1px 8px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }}
-  .pill.tp {{ background:#b06cf922; color:#b06cf9; border:1px solid #b06cf955; }}
-  a {{ color:#4f9cf9; }}
+  .pill {{ padding:1px 8px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap; }}
+  .pill.tp {{ background:{fb.CORE_BLUE}18; color:{fb.CORE_BLUE}; border:1px solid {fb.CORE_BLUE}55; }}
 </style>
 </head>
 <body>
-<header>
-  <h1>SEC 8-K Cyber-Incident Dashboard</h1>
-  <div class="sub">Source: <code>{html.escape(source_name)}</code> &middot; material (Item 1.05) &amp; voluntary (Item 8.01) disclosures</div>
-</header>
+{fb.brand_header(
+    "SEC 8-K Cyber-Incident Dashboard",
+    f"Source: <code style='background:rgba(255,255,255,.12);color:#fff'>{html.escape(source_name)}</code> &middot; material (Item 1.05) &amp; voluntary (Item 8.01) disclosures",
+)}
 <main>
   <div class="cards">
     <div class="card"><div class="val">{agg['total']}</div><div class="lbl">Total cyber filings</div></div>
@@ -288,15 +270,14 @@ def render(rows: list[dict], agg: dict, source_name: str) -> str:
 </main>
 <script>
 const C = {json.dumps(charts)};
-const grid="#2a3550", muted="#8b98b0";
-Chart.defaults.color = muted;
-Chart.defaults.font.family = "Segoe UI, system-ui, sans-serif";
+const grid="{fb.LINE}", muted="{fb.ACCENT_GRAY}";
+{fb.chart_theme_js()}
 
 new Chart(document.getElementById('trend'), {{
   type:'bar',
   data:{{ labels:C.monthsLabels, datasets:[
-    {{ label:'Item 1.05 (material)', data:C.monthly105, backgroundColor:'#f9536b' }},
-    {{ label:'Item 8.01 (voluntary)', data:C.monthly801, backgroundColor:'#4f9cf9' }}
+    {{ label:'Item 1.05 (material)', data:C.monthly105, backgroundColor:'{fb.CORE_BLUE}' }},
+    {{ label:'Item 8.01 (voluntary)', data:C.monthly801, backgroundColor:'{fb.ACCENT_BLUE}' }}
   ]}},
   options:{{ responsive:true, scales:{{ x:{{stacked:true,grid:{{color:grid}}}}, y:{{stacked:true,beginAtZero:true,grid:{{color:grid}}}} }},
     plugins:{{ legend:{{position:'bottom'}} }} }}
@@ -311,20 +292,20 @@ new Chart(document.getElementById('itype'), {{
 
 new Chart(document.getElementById('tp'), {{
   type:'doughnut',
-  data:{{ labels:['Third-party / vendor','Direct'], datasets:[{{ data:[C.tpYes,C.tpNo], backgroundColor:['#b06cf9','#4f9cf9'] }}]}},
+  data:{{ labels:['Third-party / vendor','Direct'], datasets:[{{ data:[C.tpYes,C.tpNo], backgroundColor:['{fb.CORE_BLUE}','{fb.ACCENT_BLUE}'] }}]}},
   options:{{ responsive:true, plugins:{{legend:{{position:'bottom'}}}} }}
 }});
 
 new Chart(document.getElementById('industry'), {{
   type:'bar',
-  data:{{ labels:C.industryLabels, datasets:[{{ data:C.industryData, backgroundColor:'#5fd08a' }}]}},
+  data:{{ labels:C.industryLabels, datasets:[{{ data:C.industryData, backgroundColor:'{fb.ACCENT_GREEN}' }}]}},
   options:{{ indexAxis:'y', responsive:true, plugins:{{legend:{{display:false}}}},
     scales:{{ x:{{beginAtZero:true,grid:{{color:grid}}}}, y:{{grid:{{color:grid}}}} }} }}
 }});
 
 new Chart(document.getElementById('dtype'), {{
   type:'bar',
-  data:{{ labels:C.dataTypeLabels, datasets:[{{ data:C.dataTypeData, backgroundColor:'#f9903e' }}]}},
+  data:{{ labels:C.dataTypeLabels, datasets:[{{ data:C.dataTypeData, backgroundColor:'{fb.ACCENT_YELLOW}' }}]}},
   options:{{ responsive:true, plugins:{{legend:{{display:false}}}},
     scales:{{ x:{{grid:{{color:grid}}}}, y:{{beginAtZero:true,grid:{{color:grid}}}} }} }}
 }});

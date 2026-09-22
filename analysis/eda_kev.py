@@ -17,9 +17,13 @@ import glob
 import html
 import json
 import statistics
+import sys
 from collections import defaultdict
 from datetime import date, datetime
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import finra_brand as fb  # noqa: E402
 
 DATA_DIR = Path("data")
 YEARS = [2025, 2026]
@@ -219,13 +223,7 @@ def print_summary(results: list[dict], source_name: str, total_rows: int) -> Non
 # HTML report
 # ---------------------------------------------------------------------------
 
-_SEV_COLORS = {
-    "CRITICAL": "#f9536b",
-    "HIGH": "#f9903e",
-    "MEDIUM": "#f9cf3e",
-    "LOW": "#5fd08a",
-    "UNKNOWN": "#8b98b0",
-}
+_SEV_COLORS = dict(fb.SEVERITY_COLORS)
 
 
 def _sev_badge(sev: str) -> str:
@@ -380,14 +378,14 @@ def _age_stats_section(series: list[dict], trend: dict, annual: dict) -> str:
         arrow = ""
         if prev_median is not None and s["median"] is not None:
             if s["median"] < prev_median:
-                arrow = '<span style="color:#5fd08a">&darr;</span>'
+                arrow = f'<span style="color:{fb.ACCENT_GREEN}">&darr;</span>'
             elif s["median"] > prev_median:
-                arrow = '<span style="color:#f9536b">&uarr;</span>'
+                arrow = f'<span style="color:{fb.ACCENT_RED}">&uarr;</span>'
             else:
-                arrow = '<span style="color:#8b98b0">&rarr;</span>'
+                arrow = f'<span style="color:{fb.ACCENT_GRAY}">&rarr;</span>'
         prev_median = s["median"]
         zd = s["zero_day"]
-        zd_cell = f'<b style="color:#f9536b">{zd}</b>' if zd else "0"
+        zd_cell = f'<b style="color:{fb.ACCENT_RED}">{zd}</b>' if zd else "0"
         rows.append(
             f"<tr><td>{html.escape(s['label'])}</td>"
             f"<td class='num'>{s['n']}</td>"
@@ -456,59 +454,31 @@ def render_html(results: list[dict], source_name: str, total_rows: int) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KEV Enriched EDA &mdash; {" &amp; ".join(str(r['year']) for r in results)}</title>
+{fb.FONT_IMPORT}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>const CHART_DATA = {{}};</script>
 <style>
-  :root {{ --bg:#0f1420; --panel:#1a2233; --ink:#e6ebf5; --muted:#8b98b0; --grid:#2a3550; }}
-  * {{ box-sizing:border-box; }}
-  body {{ margin:0; background:var(--bg); color:var(--ink);
-    font:15px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }}
-  header {{ padding:30px 40px 6px; }}
-  h1 {{ margin:0 0 4px; font-size:26px; }}
-  .sub {{ color:var(--muted); font-size:14px; }}
-  main {{ padding:12px 40px 60px; max-width:1180px; }}
+{fb.base_css()}
   .year {{ margin-top:34px; }}
-  .yh {{ font-size:22px; border-bottom:2px solid var(--grid); padding-bottom:6px; }}
-  .cards {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin:18px 0; }}
-  .card {{ background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:16px 18px; }}
-  .card .val {{ font-size:28px; font-weight:700; }}
-  .card .lbl {{ color:var(--muted); font-size:13px; margin-top:4px; }}
-  .panel {{ background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:18px 22px; margin:20px 0; }}
-  .panel h3 {{ margin:0 0 14px; font-size:16px; }}
-  canvas {{ max-height:320px; }}
-  .note {{ background:#20293d; border-left:3px solid #4f9cf9; border-radius:6px; padding:10px 14px; color:#c7d2e6; font-size:13px; margin-top:14px; }}
-  .tablewrap {{ overflow-x:auto; max-height:520px; overflow-y:auto; border:1px solid var(--grid); border-radius:8px; }}
-  table {{ width:100%; border-collapse:collapse; font-size:13px; }}
-  th,td {{ padding:8px 10px; border-bottom:1px solid var(--grid); text-align:left; vertical-align:top; }}
-  thead th {{ position:sticky; top:0; background:#141b2a; color:var(--muted); font-weight:600; z-index:1; }}
-  td.num, th.num {{ text-align:right; font-variant-numeric:tabular-nums; }}
-  td.mono {{ font-family:ui-monospace,Consolas,monospace; white-space:nowrap; }}
-  td.desc {{ min-width:340px; color:#c7d2e6; }}
-  .badge {{ padding:1px 8px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }}
-  .foot {{ color:var(--muted); font-size:12px; margin-top:30px; }}
-  code {{ background:#0c1019; padding:1px 6px; border-radius:4px; }}
-  nav a {{ color:#4f9cf9; margin-right:14px; text-decoration:none; }}
+  .yh {{ font-size:22px; border-bottom:2px solid var(--yellow); padding-bottom:6px; }}
+  td.mono {{ font-family:ui-monospace,Consolas,monospace; white-space:nowrap; color:var(--core); }}
+  td.desc {{ min-width:340px; color:var(--body); }}
+  nav.jump {{ margin-top:10px; }}
+  nav.jump a {{ color:#cdd8ea; margin-right:14px; text-decoration:none; font-size:13px; }}
+  nav.jump a:hover {{ color:#fff; }}
   .defgrid {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; margin:18px 0; }}
-  .defcard {{ background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:18px 22px; }}
-  .defcard h3 {{ margin:0 0 10px; font-size:16px; color:#4f9cf9; }}
-  .defcard p {{ margin:0 0 10px; color:#c7d2e6; font-size:14px; }}
-  .filters {{ display:flex; flex-wrap:wrap; gap:12px 16px; align-items:flex-end;
-    background:#141b2a; border:1px solid var(--grid); border-radius:10px; padding:12px 16px; margin-bottom:14px; }}
-  .filters label {{ display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted); }}
-  .filters select, .filters input {{ background:#0c1019; color:var(--ink);
-    border:1px solid var(--grid); border-radius:6px; padding:6px 8px; font-size:13px; }}
-  .filters button {{ background:#2a3550; color:var(--ink); border:1px solid var(--grid);
-    border-radius:6px; padding:7px 14px; font-size:13px; cursor:pointer; }}
-  .filters button:hover {{ background:#34406a; }}
-  .fcount {{ color:var(--muted); font-size:13px; margin-left:auto; align-self:center; }}
+  .defcard {{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px 22px;
+    box-shadow:0 1px 2px rgba(16,36,66,.05); }}
+  .defcard h3 {{ margin:0 0 10px; font-size:16px; color:var(--accent); }}
+  .defcard p {{ margin:0 0 10px; color:var(--body); font-size:14px; }}
 </style>
 </head>
 <body>
-<header>
-  <h1>CISA KEV &times; NVD &mdash; Exploratory Analysis</h1>
-  <div class="sub">Source: <code>{html.escape(source_name)}</code> &middot; {total_rows} total KEV records</div>
-  <nav>Jump to: <a href="#defs">Definitions</a> {" ".join(f'<a href="#y{r["year"]}">{r["year"]}</a>' for r in results)}</nav>
-</header>
+{fb.brand_header(
+    "CISA KEV &times; NVD &mdash; Exploratory Analysis",
+    f"Source: <code style='background:rgba(255,255,255,.12);color:#fff'>{html.escape(source_name)}</code> &middot; {total_rows} total KEV records",
+)}
+<div style="background:var(--core);padding:0 40px 18px"><nav class="jump">Jump to: <a href="#defs">Definitions</a> {" ".join(f'<a href="#y{r["year"]}">{r["year"]}</a>' for r in results)}</nav></div>
 <main>
   <section class="year" id="defs">
     <h2 class="yh">Definitions</h2>
@@ -547,17 +517,16 @@ def render_html(results: list[dict], source_name: str, total_rows: int) -> str:
     Descriptions prefer the NVD writeup, falling back to CISA's KEV summary. Months with no KEV additions are omitted from charts.</div>
 </main>
 <script>
-const grid="#2a3550", muted="#8b98b0";
-Chart.defaults.color = muted;
-Chart.defaults.font.family = "Segoe UI, system-ui, sans-serif";
+const grid="{fb.LINE}", muted="{fb.ACCENT_GRAY}";
+{fb.chart_theme_js()}
 for (const year of {years_js}) {{
   const D = CHART_DATA[year];
   new Chart(document.getElementById('counts'+year), {{
     type:'bar',
     data:{{ labels:D.labels, datasets:[
-      {{ label:'New KEV entries', data:D.newKev, backgroundColor:'#4f9cf9' }},
-      {{ label:'New CVEs (published that year)', data:D.newCve, backgroundColor:'#f97362' }},
-      {{ label:'Ransomware-linked', data:D.ransomware, backgroundColor:'#b06cf9' }}
+      {{ label:'New KEV entries', data:D.newKev, backgroundColor:'{fb.CORE_BLUE}' }},
+      {{ label:'New CVEs (published that year)', data:D.newCve, backgroundColor:'{fb.ACCENT_BLUE}' }},
+      {{ label:'Ransomware-linked', data:D.ransomware, backgroundColor:'{fb.ACCENT_RED}' }}
     ]}},
     options:{{ responsive:true, scales:{{ x:{{grid:{{color:grid}}}}, y:{{grid:{{color:grid}},beginAtZero:true}} }},
       plugins:{{ legend:{{position:'bottom'}} }} }}
@@ -565,8 +534,8 @@ for (const year of {years_js}) {{
   new Chart(document.getElementById('age'+year), {{
     type:'line',
     data:{{ labels:D.labels, datasets:[
-      {{ label:'Average age (days)', data:D.avgAge, borderColor:'#f97362', backgroundColor:'#f9736222', tension:.3, spanGaps:true }},
-      {{ label:'Median age (days)', data:D.medAge, borderColor:'#4f9cf9', backgroundColor:'#4f9cf922', tension:.3, spanGaps:true }}
+      {{ label:'Average age (days)', data:D.avgAge, borderColor:'{fb.ACCENT_GRAY}', backgroundColor:'{fb.ACCENT_GRAY}22', tension:.3, spanGaps:true }},
+      {{ label:'Median age (days)', data:D.medAge, borderColor:'{fb.ACCENT_BLUE}', backgroundColor:'{fb.ACCENT_BLUE}22', tension:.3, spanGaps:true }}
     ]}},
     options:{{ responsive:true, scales:{{ x:{{grid:{{color:grid}}}}, y:{{grid:{{color:grid}},beginAtZero:true,title:{{display:true,text:'days'}}}} }},
       plugins:{{ legend:{{position:'bottom'}} }} }}
@@ -579,8 +548,8 @@ if (CHART_DATA.trend) {{
   new Chart(document.getElementById('trendChart'), {{
     type:'line',
     data:{{ labels:T.labels, datasets:[
-      {{ label:'Median age (days)', data:T.median, borderColor:'#4f9cf9', backgroundColor:'#4f9cf922', tension:.25, borderWidth:2.5, spanGaps:true }},
-      {{ label:'Mean age (days)', data:T.mean, borderColor:'#f97362', backgroundColor:'#f9736222', borderDash:[5,4], tension:.25, spanGaps:true }}
+      {{ label:'Median age (days)', data:T.median, borderColor:'{fb.ACCENT_BLUE}', backgroundColor:'{fb.ACCENT_BLUE}22', tension:.25, borderWidth:2.5, spanGaps:true }},
+      {{ label:'Mean age (days)', data:T.mean, borderColor:'{fb.ACCENT_GRAY}', backgroundColor:'{fb.ACCENT_GRAY}22', borderDash:[5,4], tension:.25, spanGaps:true }}
     ]}},
     options:{{ responsive:true, scales:{{ x:{{grid:{{color:grid}}}}, y:{{grid:{{color:grid}},beginAtZero:true,title:{{display:true,text:'days'}}}} }},
       plugins:{{ legend:{{position:'bottom'}} }} }}
