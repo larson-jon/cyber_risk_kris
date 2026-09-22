@@ -159,6 +159,8 @@ By default these write into `data/` (gitignored). Shareable snapshots are kept i
 
 `analysis/readme_html.py` renders this README as a FINRA-branded `reports/readme.html`, linked from the landing page. Re-run it after editing the README to refresh the HTML docs.
 
+`analysis/nvd_monthly_totals.py` fetches the **total** number of CVEs NVD published per month (the denominator the KEV-only data can't provide) and caches it to `data/nvd_monthly_totals.json`. The KEV report plots this as a secondary-axis line so exploited counts can be read against total published volume — e.g. ~12,700 CVEs published in a month vs. ~30 added to KEV. Run `python analysis/nvd_monthly_totals.py 2025 2026` to (re)build the cache.
+
 ## Extending
 
 To add a new source, create `collectors/<source>.py` with a small client class that reuses `build_session()` from `http_client.py`, then wire a subcommand into `cli.py`.

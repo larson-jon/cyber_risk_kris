@@ -24,6 +24,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import finra_brand as fb  # noqa: E402
+from nvd_monthly_totals import load_cache as load_nvd_totals  # noqa: E402
+
+# Total CVEs published per month (YYYY-MM -> count), from the NVD API cache.
+# Empty if the cache hasn't been built; the total-CVE line is then omitted.
+NVD_TOTALS = load_nvd_totals()
 
 DATA_DIR = Path("data")
 YEARS = [2025, 2026]
@@ -330,6 +335,8 @@ def _year_section(res: dict) -> str:
         "ransomware": [m["ransomware"] for m in active],
         "avgAge": [m["avg_age_days"] for m in active],
         "medAge": [m["median_age_days"] for m in active],
+        # Total CVEs NVD published that month (denominator). None if uncached.
+        "totalCve": [NVD_TOTALS.get(f"{year}-{m['month']:02d}") for m in active],
     }
     detail_rows = _entry_rows_html(res["entries"], year)
     filter_bar = _filter_bar(year, res["entries"])
@@ -343,8 +350,12 @@ def _year_section(res: dict) -> str:
       <div class="card"><div class="val">{res['median_age']}</div><div class="lbl">Median days: published &rarr; exploited</div></div>
     </div>
     <div class="panel">
-      <h3>New KEV vs. newly published CVEs, by month</h3>
+      <h3>Exploited vs. total published CVEs, by month</h3>
       <canvas id="counts{year}"></canvas>
+      <div class="note">Bars (left axis) are exploited-vulnerability counts: KEV entries added and, of those,
+        how many were first published that year. The line (right axis) is the <b>total CVEs NVD published
+        that month</b> &mdash; the denominator. Only a tiny fraction of published CVEs are ever exploited,
+        so the bars stay near zero while the line runs into the thousands.</div>
     </div>
     <div class="panel">
       <h3>Age: first captured (NVD published) &rarr; exploited (KEV added)</h3>
@@ -528,14 +539,27 @@ const grid="{fb.LINE}", muted="{fb.ACCENT_GRAY}";
 {fb.chart_theme_js()}
 for (const year of {years_js}) {{
   const D = CHART_DATA[year];
+  const hasTotals = D.totalCve && D.totalCve.some(v => v != null);
+  const countsDatasets = [
+    {{ type:'bar', label:'New KEV entries', data:D.newKev, backgroundColor:'{fb.CORE_BLUE}', yAxisID:'y', order:3 }},
+    {{ type:'bar', label:'New CVEs (published that year)', data:D.newCve, backgroundColor:'{fb.ACCENT_BLUE}', yAxisID:'y', order:3 }},
+    {{ type:'bar', label:'Ransomware-linked', data:D.ransomware, backgroundColor:'{fb.ACCENT_RED}', yAxisID:'y', order:3 }}
+  ];
+  if (hasTotals) {{
+    countsDatasets.push({{ type:'line', label:'Total CVEs published (all NVD)', data:D.totalCve,
+      borderColor:'{fb.ACCENT_GREEN}', backgroundColor:'{fb.ACCENT_GREEN}22', borderWidth:2.5,
+      tension:.3, yAxisID:'y1', order:1, pointRadius:2 }});
+  }}
   new Chart(document.getElementById('counts'+year), {{
-    type:'bar',
-    data:{{ labels:D.labels, datasets:[
-      {{ label:'New KEV entries', data:D.newKev, backgroundColor:'{fb.CORE_BLUE}' }},
-      {{ label:'New CVEs (published that year)', data:D.newCve, backgroundColor:'{fb.ACCENT_BLUE}' }},
-      {{ label:'Ransomware-linked', data:D.ransomware, backgroundColor:'{fb.ACCENT_RED}' }}
-    ]}},
-    options:{{ responsive:true, scales:{{ x:{{grid:{{color:grid}}}}, y:{{grid:{{color:grid}},beginAtZero:true}} }},
+    data:{{ labels:D.labels, datasets:countsDatasets }},
+    options:{{ responsive:true,
+      scales:{{
+        x:{{ grid:{{color:grid}} }},
+        y:{{ position:'left', grid:{{color:grid}}, beginAtZero:true,
+          title:{{display:true,text:'exploited (KEV) count'}} }},
+        y1:{{ position:'right', display:hasTotals, beginAtZero:true, grid:{{drawOnChartArea:false}},
+          title:{{display:true,text:'total CVEs published'}} }}
+      }},
       plugins:{{ legend:{{position:'bottom'}} }} }}
   }});
   new Chart(document.getElementById('age'+year), {{

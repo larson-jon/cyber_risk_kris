@@ -11,8 +11,11 @@ __pycache__/
 venv/
 env/
 
-# Collected data output
-data/
+# Collected data output (ignore contents, but not the folder itself, so the
+# cached NVD monthly totals below can be re-included).
+data/*
+# ...but keep the small cached NVD monthly totals (report reference data).
+!data/nvd_monthly_totals.json
 *.log
 
 # OS / editor
