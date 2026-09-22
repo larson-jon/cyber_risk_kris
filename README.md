@@ -157,6 +157,8 @@ Analysis scripts in `analysis/` generate self-contained HTML reports:
 
 By default these write into `data/` (gitignored). Shareable snapshots are kept in `reports/`, with `reports/index.html` as a landing page linking both. To refresh the committed snapshots after new data pulls, regenerate the reports and copy the HTML into `reports/`.
 
+`analysis/readme_html.py` renders this README as a FINRA-branded `reports/readme.html`, linked from the landing page. Re-run it after editing the README to refresh the HTML docs.
+
 ## Extending
 
 To add a new source, create `collectors/<source>.py` with a small client class that reuses `build_session()` from `http_client.py`, then wire a subcommand into `cli.py`.

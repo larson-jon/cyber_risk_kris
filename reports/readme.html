@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation | Cyber Risk KRIs | FINRA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+
+  :root {
+    --core:#233E66; --accent:#0082D1; --gray:#595959;
+    --green:#9EC405; --yellow:#FFCF40; --red:#FB483D;
+    --ink:#1a1a1a; --body:#333333; --muted:#6b7280; --line:#e2e6ec;
+    --panel:#ffffff; --bg:#f4f6f9;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--body);
+    font-family:'Open Sans',-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    font-size:15px; line-height:1.6; }
+  /* White band carrying the official black FINRA logo. */
+  .logoband { background:#fff; padding:18px 40px; }
+  .logo { height:52px; width:auto; display:block; }
+  /* FINRA yellow top rule echoing the brand cover. */
+  .brandbar { height:6px; background:var(--yellow); }
+  header.brand { background:var(--core); color:#fff; padding:24px 40px 24px; }
+  header.brand h1 { font-family:'Open Sans',sans-serif; font-weight:800;
+    margin:14px 0 4px; font-size:26px; color:#fff; }
+  header.brand .sub { color:#cdd8ea; font-size:14px; }
+  header.brand .tagline { color:#9db4d6; font-size:12px; margin-top:8px;
+    font-family:'Lora',Georgia,serif; font-style:italic; }
+  h2,h3 { font-family:'Open Sans',sans-serif; font-weight:800; color:var(--core); }
+  main { padding:22px 40px 60px; max-width:1200px; margin:0 auto; }
+  a { color:var(--accent); }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin:20px 0; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:16px 18px; box-shadow:0 1px 2px rgba(16,36,66,.05); }
+  .card .val { font-size:28px; font-weight:800; color:var(--core); }
+  .card .lbl { color:var(--muted); font-size:13px; margin-top:4px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:18px 22px; margin:18px 0; box-shadow:0 1px 2px rgba(16,36,66,.05); }
+  .panel h3 { margin:0 0 14px; font-size:16px; }
+  canvas { max-height:320px; }
+  .note { background:#eef3fa; border-left:4px solid var(--accent); border-radius:4px;
+    padding:12px 16px; color:#2b3a52; font-size:13px; margin:14px 0; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { padding:9px 11px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  thead th { position:sticky; top:0; background:var(--core); color:#fff; font-weight:600; }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  tbody tr:nth-child(even) { background:#f7f9fc; }
+  .tablewrap { overflow-x:auto; max-height:540px; overflow-y:auto; border:1px solid var(--line); border-radius:8px; }
+  .badge { padding:1px 8px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .filters { display:flex; flex-wrap:wrap; gap:12px 16px; align-items:flex-end;
+    background:#eef3fa; border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:14px; }
+  .filters label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--core); font-weight:600; }
+  .filters select, .filters input { background:#fff; color:var(--ink);
+    border:1px solid var(--line); border-radius:6px; padding:6px 8px; font-size:13px; font-weight:400; }
+  .filters button { background:var(--core); color:#fff; border:none;
+    border-radius:6px; padding:8px 15px; font-size:13px; cursor:pointer; font-weight:600; }
+  .filters button:hover { background:#1a2f4d; }
+  .fcount { color:var(--muted); font-size:13px; margin-left:auto; align-self:center; }
+  .foot { color:var(--muted); font-size:12px; margin-top:30px; border-top:1px solid var(--line); padding-top:14px; }
+  code { background:#eef1f5; padding:1px 6px; border-radius:4px; font-size:.92em; }
+
+  .info { display:inline-flex; align-items:center; justify-content:center;
+    width:15px; height:15px; border-radius:50%; background:#0082D1; color:#fff;
+    font-size:10px; font-weight:700; font-style:normal; cursor:help; margin-left:5px;
+    vertical-align:middle; font-family:'Open Sans',sans-serif; }
+  thead th .info { background:#fff; color:#233E66; }
+
+  main { max-width:900px; }
+  .doc h1 { font-size:24px; margin:26px 0 10px; }
+  .doc h2 { font-size:20px; margin:30px 0 10px; border-bottom:2px solid var(--yellow); padding-bottom:6px; }
+  .doc h3 { font-size:16px; margin:22px 0 8px; }
+  .doc p { margin:10px 0; }
+  .doc ul { margin:10px 0; padding-left:22px; }
+  .doc li { margin:4px 0; }
+  .doc pre { background:#0f1b2e; color:#e6ebf5; border:1px solid var(--line); border-radius:8px;
+    padding:14px 16px; overflow-x:auto; font-size:13px; line-height:1.5; }
+  .doc pre code { background:none; padding:0; color:inherit; font-size:13px; }
+  .doc code { background:#eef1f5; color:var(--core); padding:1px 6px; border-radius:4px; font-size:.92em; }
+  .doc blockquote { margin:14px 0; padding:12px 16px; background:#eef3fa;
+    border-left:4px solid var(--accent); border-radius:4px; color:#2b3a52; font-size:14px; }
+  .doc a { color:var(--accent); }
+  .backlink { display:inline-block; margin-bottom:6px; color:#cdd8ea; text-decoration:none; font-size:13px; }
+  .backlink:hover { color:#fff; }
+</style>
+</head>
+<body>
+<div class="logoband">
+  <img class="logo" src="finra%20logo.png" alt="FINRA Enterprise Risk Management">
+</div>
+<div class="brandbar"></div>
+<header class="brand">
+  <h1>Cyber Risk KRIs &mdash; Documentation</h1>
+  <div class="sub">Project README &middot; collectors, enrichment, and reports</div>
+  <div class="tagline">Investor protection. Market integrity.</div>
+</header>
+<div style="background:var(--core);padding:0 40px 16px"><a class="backlink" href="index.html">&larr; Back to reports</a></div>
+<main>
+  <div class="doc">
+<h1>Cyber KRIs — Security Data Collectors</h1>
+<p>Pulls cyber security data from public sources into local JSON files. Currently supported:</p>
+<ul>
+<li><strong>NIST NVD</strong> — CVE records via the <a href="https://nvd.nist.gov/developers/vulnerabilities" target="_blank" rel="noopener">NVD API 2.0</a></li>
+<li><strong>CISA KEV</strong> — the <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener">Known Exploited Vulnerabilities catalog</a></li>
+<li><strong>SEC EDGAR</strong> — 8-K <strong>Item 1.05</strong> material cybersecurity-incident disclosures via <a href="https://efts.sec.gov/LATEST/search-index" target="_blank" rel="noopener">EDGAR full-text search</a></li>
+</ul>
+<p>The design leaves room to add more sources later (each lives in its own module under <code>collectors/</code>).</p>
+<h2>Project layout</h2>
+<pre><code>collectors/
+  __init__.py
+  config.py        # env/.env configuration (API key, data dir)
+  http_client.py   # shared requests session (retries) + sliding-window rate limiter
+  nvd.py           # NIST NVD API 2.0 client (pagination, incremental pulls)
+  kev.py           # CISA KEV catalog client
+  flatten.py       # flatten NVD/KEV/EDGAR records into CSV rows; join KEV+NVD
+  edgar.py         # SEC EDGAR 8-K Item 1.05 (material cyber incident) client
+  cli.py           # command-line entry point
+.env.example       # copy to .env and fill in
+requirements.txt</code></pre>
+<h2>Setup</h2>
+<pre><code># From the project root
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# Configure (optional but recommended for NVD)
+Copy-Item .env.example .env
+# then edit .env and paste your NVD API key</code></pre>
+<p>Get a free NVD API key at <a href="https://nvd.nist.gov/developers/request-an-api-key" target="_blank" rel="noopener">https://nvd.nist.gov/developers/request-an-api-key</a>. Without one you&#x27;re limited to 5 requests / 30s; with one, 50 / 30s.</p>
+<h2>Usage</h2>
+<p>Run collectors as a module:</p>
+<pre><code># Full CISA KEV catalog
+python -m collectors.cli kev
+
+# CVEs modified in the last 7 days (incremental pull)
+python -m collectors.cli nvd --last-days 7
+
+# CVEs modified in an explicit range (auto-chunked into &lt;=120-day windows)
+python -m collectors.cli nvd --start 2024-01-01 --end 2024-06-01
+
+# Both sources at once
+python -m collectors.cli all --last-days 7
+
+# KEV enriched with NVD detail (severity, CWEs, affected products), joined on cve_id
+python -m collectors.cli enrich
+
+# SEC 8-K Item 1.05 material cyber-incident filings (default: since 2026-01-01)
+python -m collectors.cli edgar
+python -m collectors.cli edgar --start 2026-01-01 --end 2026-06-30
+
+# Verbose logging
+python -m collectors.cli -v kev</code></pre>
+<h3>Output format</h3>
+<p>Every command accepts <code>--format</code> with <code>csv</code> (default), <code>json</code>, or <code>both</code>:</p>
+<pre><code>python -m collectors.cli kev                      # CSV (default)
+python -m collectors.cli nvd --last-days 7 --format json
+python -m collectors.cli all --last-days 7 --format both</code></pre>
+<p>Output is written to the <code>data/</code> directory (configurable via <code>DATA_DIR</code>) as timestamped files, e.g. <code>data/cisa_kev_20260922T130000Z.csv</code>. CSVs are UTF-8 with a BOM so they open cleanly in Excel.</p>
+<p><strong>CSV columns</strong></p>
+<ul>
+<li><strong>KEV</strong>: <code>cve_id, vendor_project, product, vulnerability_name, date_added, short_description, required_action, due_date, known_ransomware_campaign_use, cwes, notes</code></li>
+<li><strong>NVD</strong>: <code>cve_id, source_identifier, published, last_modified, vuln_status, description, cvss_version, cvss_base_score, cvss_base_severity, cvss_vector, cvss_source, cwes, reference_urls</code></li>
+</ul>
+<p>For NVD, the CVSS columns come from the best available metric, preferring v4.0, then v3.1, v3.0, and finally v2. Multi-value fields (CWEs, reference URLs) are joined with <code>; </code> in a single cell. Use <code>--format both</code> if you also want the full nested JSON for fields the CSV doesn&#x27;t flatten.</p>
+<h2>Enrichment: KEV + NVD</h2>
+<p><code>enrich</code> builds the combined dataset most useful for KEV-based KRIs. It fetches the full CISA KEV catalog, then looks up each KEV CVE in NVD <strong>by ID</strong> (<code>cveId</code> param) and joins the two on <code>cve_id</code> — one row per KEV entry:</p>
+<pre><code>python -m collectors.cli enrich              # CSV (default)
+python -m collectors.cli enrich --format both</code></pre>
+<p>This is far cheaper than downloading all of NVD: it makes ~1,700 targeted lookups (one per KEV CVE) instead of paging the entire ~374k-record catalog. KEV references CVEs of any age (the catalog spans 2002–present), and by-ID lookup retrieves each one regardless of publish date. Output: <code>data/kev_enriched_&lt;timestamp&gt;.csv</code>.</p>
+<p><strong>Enriched CSV columns</strong></p>
+<p>KEV context first, then NVD detail (prefixed <code>nvd_</code> to avoid clashing with KEV&#x27;s own fields):</p>
+<p><code>cve_id, vendor_project, product, vulnerability_name, date_added, due_date, known_ransomware_campaign_use, kev_cwes, short_description, in_nvd, nvd_published, nvd_last_modified, nvd_vuln_status, cvss_version, cvss_base_score, cvss_base_severity, cvss_vector, cvss_source, nvd_cwes, nvd_affected_products, nvd_description</code></p>
+<p><code>in_nvd</code> is <code>False</code> for the rare KEV CVE with no NVD record yet; its <code>nvd_*</code> columns are then blank. <code>nvd_affected_products</code> is a de-duplicated <code>vendor:product</code> list parsed from NVD CPE data (capped at 25 entries per row).</p>
+<blockquote><strong>Rate limits &amp; runtime</strong>: enrichment issues one request per KEV CVE, so an NVD API key matters here. With a key (~50/30s) the full run takes roughly 20 minutes; without one (5/30s) it is about 10x slower.</blockquote>
+<h2>SEC EDGAR: 8-K cyber-incident filings (Item 1.05 &amp; 8.01)</h2>
+<p><code>edgar</code> collects Form 8-K cyber disclosures and extracts each filing&#x27;s incident narrative. It queries the official EDGAR full-text search API and supports two disclosure paths via <code>--item</code>:</p>
+<ul>
+<li><strong><code>1.05</code></strong> (default) — <em>material</em> cybersecurity incidents (SEC rule effective Dec 2023). Every 1.05 filing is cyber-related, so we keep filings whose structured <code>items</code> contain <code>1.05</code>.</li>
+<li><strong><code>8.01</code></strong> — <em>voluntary / non-material</em> cyber events filed under &quot;Other Events&quot;. Because 8.01 is a catch-all, we search for cyber language, then <strong>verify</strong> each candidate by fetching its primary 8-K document and confirming the 8.01 section is genuinely about a cyber incident. This drops the many false positives where a cyber phrase only appears in an attached exhibit.</li>
+<li><strong><code>both</code></strong> — collect 1.05 and 8.01 together (8.01 excludes any filing also carrying 1.05, to avoid double-counting).</li>
+</ul>
+<pre><code>python -m collectors.cli edgar                                   # Item 1.05, since 2026-01-01
+python -m collectors.cli edgar --item 8.01                       # voluntary cyber disclosures
+python -m collectors.cli edgar --item both --format both         # everything, CSV + JSON
+python -m collectors.cli edgar --item 1.05 --no-descriptions     # skip narrative fetch (1.05 only)</code></pre>
+<p>The default search window starts <strong>2026-01-01</strong> for both items; pass <code>--start</code> to go earlier (coverage allows back to Dec 2023).</p>
+<p><strong>EDGAR CSV columns</strong></p>
+<p><code>disclosure_type, accession, company, ticker, cik, form, filing_date, period_ending, items, business_location, incident_description, filing_url</code></p>
+<ul>
+<li><code>disclosure_type</code> is <code>1.05</code> or <code>8.01</code>.</li>
+<li><code>incident_description</code> is a plain-text excerpt of the relevant item&#x27;s narrative, pulled from the <strong>primary</strong> 8-K document (not exhibits) and trimmed to ~2000 characters. Use <code>--no-descriptions</code> (1.05 only) to skip fetching filing bodies for a faster metadata-only run. For 8.01, descriptions are always fetched because they are required for the cyber-verification step.</li>
+<li>Rows are sorted newest-first. <code>form</code> distinguishes original <code>8-K</code> from <code>8-K/A</code> amendments. <code>items</code> lists all item numbers on the filing (e.g. <code>1.05; 9.01</code>).</li>
+</ul>
+<blockquote><strong>Accuracy note</strong>: raw full-text search for cyber terms is very noisy for 8.01 — most candidates are unrelated filings (contracts, results) that merely mention a cyber word in an exhibit. Verification reads each filing&#x27;s <strong>primary 8-K document</strong>, extracts the Item 8.01 narrative, and keeps the filing only if cyber language appears <strong>in that narrative</strong>. This drops the large majority of candidates as false positives while keeping genuine disclosures. One residual limitation: some companies bundle several unrelated events under a single Item 8.01 (e.g. a note redemption <em>and</em> a cyber note), so an occasional non-cyber-primary filing can still be kept. Always read <code>incident_description</code> / <code>filing_url</code> before relying on a specific 8.01 row.</blockquote>
+<blockquote><strong>SEC fair access</strong>: EDGAR requires a descriptive <code>User-Agent</code> identifying the requester and limits clients to 10 requests/second. Set <code>EDGAR_USER_AGENT</code> in <code>.env</code> (e.g. <code>&quot;Acme Corp research jane.doe@acme.com&quot;</code>) or pass <code>--user-agent</code>. The client rate-limits itself and works without one, but setting it is the polite/expected practice.</blockquote>
+<h2>Notes on the APIs</h2>
+<p><strong>NVD API 2.0</strong></p>
+<ul>
+<li>Endpoint: <code>https://services.nvd.nist.gov/rest/json/cves/2.0</code></li>
+<li>Offset pagination via <code>startIndex</code> / <code>resultsPerPage</code> (max 2000 per page) — handled automatically.</li>
+<li>Incremental pulls use <code>lastModStartDate</code> / <code>lastModEndDate</code>; any date range is capped at 120 days, so larger backfills are chunked automatically.</li>
+<li>API key is sent in the <code>apiKey</code> header. A sliding-window rate limiter keeps requests just under the published limits.</li>
+</ul>
+<p><strong>CISA KEV</strong></p>
+<ul>
+<li>Single public JSON feed, no key required: <code>https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json</code></li>
+<li>The saved file includes catalog metadata (<code>catalogVersion</code>, <code>dateReleased</code>, <code>count</code>) plus the <code>vulnerabilities</code> list.</li>
+</ul>
+<h2>Reports</h2>
+<p>Analysis scripts in <code>analysis/</code> generate self-contained HTML reports:</p>
+<ul>
+<li><code>analysis/eda_kev.py</code> &amp;rarr; KEV &amp;times; NVD exploratory analysis (trends, time-to-exploitation stats, filterable tables).</li>
+<li><code>analysis/edgar_dashboard.py</code> &amp;rarr; SEC 8-K cyber-incident dashboard (incident types, industry, third-party share, narratives).</li>
+</ul>
+<p>By default these write into <code>data/</code> (gitignored). Shareable snapshots are kept in <code>reports/</code>, with <code>reports/index.html</code> as a landing page linking both. To refresh the committed snapshots after new data pulls, regenerate the reports and copy the HTML into <code>reports/</code>.</p>
+<p><code>analysis/readme_html.py</code> renders this README as a FINRA-branded <code>reports/readme.html</code>, linked from the landing page. Re-run it after editing the README to refresh the HTML docs.</p>
+<h2>Extending</h2>
+<p>To add a new source, create <code>collectors/&lt;source&gt;.py</code> with a small client class that reuses <code>build_session()</code> from <code>http_client.py</code>, then wire a subcommand into <code>cli.py</code>.</p>
+  </div>
+  <div class="foot">Rendered from <code>README.md</code> by <code>analysis/readme_html.py</code>.</div>
+</main>
+</body>
+</html>
