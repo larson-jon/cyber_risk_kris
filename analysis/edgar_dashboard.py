@@ -1,10 +1,10 @@
-"""Advisory dashboard for SEC 8-K cyber-incident filings (Item 1.05 & 8.01).
+"""Advisory dashboard for SEC 8-K material cyber-incident filings (Item 1.05).
 
 Reads the latest data/edgar_8k_cyber_*.csv (produced by
 `python -m collectors.cli edgar --item both`) and builds a self-contained HTML
-dashboard aimed at a cyber-security advisor: monthly incident trend, disclosure
-type split, third-party / supply-chain share, industry breakdown, incident-type
-mix, affected data types, and a filterable table of the incident narratives.
+dashboard aimed at a cyber-security advisor: monthly incident trend,
+third-party / supply-chain share, industry breakdown, incident-type mix,
+affected data types, and a filterable table of the incident narratives.
 
 Usage:  python analysis/edgar_dashboard.py
 Output: data/edgar_dashboard.html
@@ -142,7 +142,6 @@ def _row_html(r: dict) -> str:
         f'<td>{html.escape(r["filing_date"])}</td>'
         f'<td class="co">{html.escape(r["company"])}'
         f'{" (" + html.escape(r["ticker"]) + ")" if r.get("ticker") else ""}</td>'
-        f'<td><span class="pill" style="background:{color}22;color:{color};border:1px solid {color}55">{html.escape(r["disclosure_type"])}</span></td>'
         f'<td><span style="color:{color}">{html.escape(itype)}</span></td>'
         f'<td>{html.escape(r.get("industry") or "")}</td>'
         f'<td class="ctr">{tp_cell}</td>'
@@ -165,7 +164,6 @@ def render(rows: list[dict], agg: dict, source_name: str) -> str:
     charts = {
         "monthsLabels": agg["months"],
         "monthly105": agg["monthly_105"],
-        "monthly801": agg["monthly_801"],
         "industryLabels": [k for k, _ in agg["industries"]],
         "industryData": [v for _, v in agg["industries"]],
         "typeLabels": [k for k, _ in agg["incident_types"]],
@@ -207,13 +205,11 @@ def render(rows: list[dict], agg: dict, source_name: str) -> str:
 <body>
 {fb.brand_header(
     "SEC 8-K Cyber-Incident Dashboard",
-    f"Source: <code style='background:rgba(255,255,255,.12);color:#fff'>{html.escape(source_name)}</code> &middot; material (Item 1.05) &amp; voluntary (Item 8.01) disclosures",
+    f"Source: <code style='background:rgba(255,255,255,.12);color:#fff'>{html.escape(source_name)}</code> &middot; material cybersecurity incident disclosures (Item 1.05)",
 )}
 <main>
   <div class="cards">
-    <div class="card"><div class="val">{agg['total']}</div><div class="lbl">Total cyber filings</div></div>
-    <div class="card"><div class="val">{agg['count_105']}</div><div class="lbl">Item 1.05 (material)</div></div>
-    <div class="card"><div class="val">{agg['count_801']}</div><div class="lbl">Item 8.01 (voluntary)</div></div>
+    <div class="card"><div class="val">{agg['count_105']}</div><div class="lbl">Item 1.05 material incidents</div></div>
     <div class="card"><div class="val">{tp_pct}%</div><div class="lbl">Involved a third party / vendor</div></div>
   </div>
 
@@ -242,9 +238,6 @@ def render(rows: list[dict], agg: dict, source_name: str) -> str:
   <div class="panel">
     <h3>Incident filings &mdash; filterable</h3>
     <div class="filters" id="fbar">
-      <label>Disclosure
-        <select data-f="type"><option value="">All</option><option value="1.05">1.05</option><option value="8.01">8.01</option></select>
-      </label>
       <label>Incident type <select data-f="itype"><option value="">All</option>{itype_opts}</select></label>
       <label>Industry <select data-f="industry"><option value="">All</option>{industry_opts}</select></label>
       <label>Third party <select data-f="tp"><option value="">All</option><option value="yes">Yes</option><option value="no">No</option></select></label>
@@ -256,7 +249,7 @@ def render(rows: list[dict], agg: dict, source_name: str) -> str:
     <div class="tablewrap">
     <table id="ftable">
       <thead><tr>
-        <th>Date</th><th>Company</th><th>Item</th><th>Incident type</th><th>Industry</th>
+        <th>Date</th><th>Company</th><th>Incident type</th><th>Industry</th>
         <th>Vendor</th><th>Data</th><th>Status</th><th>Description</th><th></th>
       </tr></thead>
       <tbody>{table_rows}</tbody>
@@ -276,10 +269,9 @@ const grid="{fb.LINE}", muted="{fb.ACCENT_GRAY}";
 new Chart(document.getElementById('trend'), {{
   type:'bar',
   data:{{ labels:C.monthsLabels, datasets:[
-    {{ label:'Item 1.05 (material)', data:C.monthly105, backgroundColor:'{fb.CORE_BLUE}' }},
-    {{ label:'Item 8.01 (voluntary)', data:C.monthly801, backgroundColor:'{fb.ACCENT_BLUE}' }}
+    {{ label:'Item 1.05 material incidents', data:C.monthly105, backgroundColor:'{fb.CORE_BLUE}' }}
   ]}},
-  options:{{ responsive:true, scales:{{ x:{{stacked:true,grid:{{color:grid}}}}, y:{{stacked:true,beginAtZero:true,grid:{{color:grid}}}} }},
+  options:{{ responsive:true, scales:{{ x:{{grid:{{color:grid}}}}, y:{{beginAtZero:true,grid:{{color:grid}}}} }},
     plugins:{{ legend:{{position:'bottom'}} }} }}
 }});
 
@@ -317,11 +309,10 @@ new Chart(document.getElementById('dtype'), {{
   const countEl = bar.querySelector('.fcount');
   function val(n) {{ const e = bar.querySelector('[data-f="'+n+'"]'); return e ? e.value.trim().toLowerCase() : ""; }}
   function apply() {{
-    const ft=val('type'), fi=val('itype'), fin=val('industry'), ftp=val('tp'), fm=val('month'), fq=val('q');
+    const fi=val('itype'), fin=val('industry'), ftp=val('tp'), fm=val('month'), fq=val('q');
     let shown=0;
     rows.forEach(function(r) {{
       let ok=true;
-      if (ft && r.dataset.type.toLowerCase()!==ft) ok=false;
       if (fi && r.dataset.itype.toLowerCase()!==fi) ok=false;
       if (fin && r.dataset.industry.toLowerCase()!==fin) ok=false;
       if (ftp && r.dataset.tp!==ftp) ok=false;
@@ -360,7 +351,7 @@ if __name__ == "__main__":
 
     arg = sys.argv[1] if len(sys.argv) > 1 else None
     out, agg = write_dashboard(arg)
-    print(f"Rows: {agg['total']}  (1.05={agg['count_105']}, 8.01={agg['count_801']})")
+    print(f"Rows: {agg['total']}  (Item 1.05 material incidents)")
     print("Top industries:", agg["industries"][:5])
     print("Incident types:", agg["incident_types"])
     print(f"Third-party: {agg['third_party_yes']} yes / {agg['third_party_no']} no")
