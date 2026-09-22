@@ -63,18 +63,10 @@
   code { background:#eef1f5; padding:1px 6px; border-radius:4px; font-size:.92em; }
 
   .info { display:inline-flex; align-items:center; justify-content:center;
-    width:14px; height:14px; border-radius:50%; background:#0082D1; color:#fff;
-    font-size:9px; font-weight:700; font-style:normal; cursor:help; margin-left:4px;
-    vertical-align:middle; position:relative; font-family:'Open Sans',sans-serif; }
-  .info .tip { visibility:hidden; opacity:0; position:absolute; z-index:20;
-    bottom:150%; left:50%; transform:translateX(-50%); width:250px;
-    background:#233E66; color:#fff; text-align:left; font-weight:400; font-size:12px;
-    line-height:1.45; padding:9px 11px; border-radius:6px; box-shadow:0 4px 14px rgba(16,36,66,.25);
-    transition:opacity .12s; pointer-events:none; white-space:normal; text-transform:none; }
-  .info .tip::after { content:""; position:absolute; top:100%; left:50%; margin-left:-5px;
-    border:5px solid transparent; border-top-color:#233E66; }
-  .info:hover .tip, .info:focus .tip { visibility:visible; opacity:1; }
-  thead th .info .tip { font-weight:400; }
+    width:15px; height:15px; border-radius:50%; background:#0082D1; color:#fff;
+    font-size:10px; font-weight:700; font-style:normal; cursor:help; margin-left:5px;
+    vertical-align:middle; font-family:'Open Sans',sans-serif; }
+  thead th .info { background:#fff; color:#233E66; }
 
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
   @media (max-width:900px) { .grid2 { grid-template-columns:1fr; } }
@@ -98,7 +90,7 @@
 <main>
   <div class="cards">
     <div class="card"><div class="val">23</div><div class="lbl">Item 1.05 material incidents</div></div>
-    <div class="card"><div class="val">48%</div><div class="lbl">Involved a third party / vendor <span class="info" tabindex="0" aria-label="Share of filings whose narrative indicates a third-party or supply-chain vendor was involved in the incident (keyword-derived).">i<span class="tip">Share of filings whose narrative indicates a third-party or supply-chain vendor was involved in the incident (keyword-derived).</span></span></div></div>
+    <div class="card"><div class="val">48%</div><div class="lbl">Involved a third party / vendor <span class="info" title="Share of filings whose narrative indicates a third-party or supply-chain vendor was involved in the incident (keyword-derived).">i</span></div></div>
   </div>
 
   <div class="note">
@@ -138,11 +130,11 @@
     <table id="ftable">
       <thead><tr>
         <th>Date</th><th>Company</th>
-        <th>Incident type <span class="info" tabindex="0" aria-label="Primary category inferred from the filing narrative by keyword rules: Ransomware, Vendor / supply-chain, Data theft, Operational disruption, or Unauthorized access.">i<span class="tip">Primary category inferred from the filing narrative by keyword rules: Ransomware, Vendor / supply-chain, Data theft, Operational disruption, or Unauthorized access.</span></span></th>
-        <th>Industry <span class="info" tabindex="0" aria-label="Company&#x27;s industry, derived from its SIC (Standard Industrial Classification) code in the EDGAR filing.">i<span class="tip">Company&#x27;s industry, derived from its SIC (Standard Industrial Classification) code in the EDGAR filing.</span></span></th>
-        <th>Vendor <span class="info" tabindex="0" aria-label="Flagged when the filing indicates a third-party / supply-chain vendor was involved in the incident.">i<span class="tip">Flagged when the filing indicates a third-party / supply-chain vendor was involved in the incident.</span></span></th>
-        <th>Data <span class="info" tabindex="0" aria-label="Types of data the narrative indicates were affected: PII (personal), PHI (health), or Financial.">i<span class="tip">Types of data the narrative indicates were affected: PII (personal), PHI (health), or Financial.</span></span></th>
-        <th>Status <span class="info" tabindex="0" aria-label="Where the disclosure stands, inferred from the text: Investigating, Contained / restored, Litigation, or Reported.">i<span class="tip">Where the disclosure stands, inferred from the text: Investigating, Contained / restored, Litigation, or Reported.</span></span></th>
+        <th>Incident type <span class="info" title="Primary category inferred from the filing narrative by keyword rules: Ransomware, Vendor / supply-chain, Data theft, Operational disruption, or Unauthorized access.">i</span></th>
+        <th>Industry <span class="info" title="Company&#x27;s industry, derived from its SIC (Standard Industrial Classification) code in the EDGAR filing.">i</span></th>
+        <th>Vendor <span class="info" title="Flagged when the filing indicates a third-party / supply-chain vendor was involved in the incident.">i</span></th>
+        <th>Data <span class="info" title="Types of data the narrative indicates were affected: PII (personal), PHI (health), or Financial.">i</span></th>
+        <th>Status <span class="info" title="Where the disclosure stands, inferred from the text: Investigating, Contained / restored, Litigation, or Reported.">i</span></th>
         <th>Description</th><th></th>
       </tr></thead>
       <tbody><tr class="frow" data-type="1.05" data-itype="Operational disruption" data-industry="Instruments &amp; Medical Devices Mfg" data-tp="yes" data-month="2026-09" data-status="Investigating"><td>2026-09-08</td><td class="co">BOSTON SCIENTIFIC CORP (BSX)</td><td><span style="color:#0082D1">Operational disruption</span></td><td>Instruments &amp; Medical Devices Mfg</td><td class="ctr"><span class="pill tp">Vendor</span></td><td></td><td>Investigating</td><td class="desc">As previously disclosed in a Current Report on Form 8-K filed on August 26, 2026 with the Securities and Exchange Commission, on August 25, 2026, Boston Scientific Corporation (the “ Company ”) identified a cybersecurity incident that affected certain of its information technology systems and resulted in a global disruption to the Company’s operations. Upon detection, the Company activated its inc</td><td><a href="https://www.sec.gov/Archives/edgar/data/885725/000088572526000059/bsx-20260907.htm" target="_blank">filing</a></td></tr>

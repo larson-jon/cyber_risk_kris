@@ -64,18 +64,10 @@
   code { background:#eef1f5; padding:1px 6px; border-radius:4px; font-size:.92em; }
 
   .info { display:inline-flex; align-items:center; justify-content:center;
-    width:14px; height:14px; border-radius:50%; background:#0082D1; color:#fff;
-    font-size:9px; font-weight:700; font-style:normal; cursor:help; margin-left:4px;
-    vertical-align:middle; position:relative; font-family:'Open Sans',sans-serif; }
-  .info .tip { visibility:hidden; opacity:0; position:absolute; z-index:20;
-    bottom:150%; left:50%; transform:translateX(-50%); width:250px;
-    background:#233E66; color:#fff; text-align:left; font-weight:400; font-size:12px;
-    line-height:1.45; padding:9px 11px; border-radius:6px; box-shadow:0 4px 14px rgba(16,36,66,.25);
-    transition:opacity .12s; pointer-events:none; white-space:normal; text-transform:none; }
-  .info .tip::after { content:""; position:absolute; top:100%; left:50%; margin-left:-5px;
-    border:5px solid transparent; border-top-color:#233E66; }
-  .info:hover .tip, .info:focus .tip { visibility:visible; opacity:1; }
-  thead th .info .tip { font-weight:400; }
+    width:15px; height:15px; border-radius:50%; background:#0082D1; color:#fff;
+    font-size:10px; font-weight:700; font-style:normal; cursor:help; margin-left:5px;
+    vertical-align:middle; font-family:'Open Sans',sans-serif; }
+  thead th .info { background:#fff; color:#233E66; }
 
   .year { margin-top:34px; }
   .yh { font-size:22px; border-bottom:2px solid var(--yellow); padding-bottom:6px; }
@@ -160,12 +152,12 @@
       <table class="detail">
         <thead><tr>
           <th>Month</th>
-          <th class="num">n <span class="info" tabindex="0" aria-label="Number of KEV entries added that month that also have an NVD publication date, so an age could be computed.">i<span class="tip">Number of KEV entries added that month that also have an NVD publication date, so an age could be computed.</span></span></th>
+          <th class="num" title="Number of that month's KEV entries that had an NVD publication date, so age could be computed.">n</th>
           <th class="num">Min</th>
           <th class="num">Max</th>
-          <th class="num">Mean <span class="info" tabindex="0" aria-label="Average days from NVD publication to KEV listing. Skewed upward by a few very old CVEs newly exploited, so it runs far above the median.">i<span class="tip">Average days from NVD publication to KEV listing. Skewed upward by a few very old CVEs newly exploited, so it runs far above the median.</span></span></th>
-          <th class="num">Median <span class="info" tabindex="0" aria-label="The middle value of days-to-exploitation for that month. More representative of the typical case than the mean; the preferred KRI.">i<span class="tip">The middle value of days-to-exploitation for that month. More representative of the typical case than the mean; the preferred KRI.</span></span></th>
-          <th class="num">Zero-day (&le;0) <span class="info" tabindex="0" aria-label="Count of entries added to CISA KEV on or before the CVE was published in NVD (age of 0 or negative) - i.e. exploited at or before public disclosure. A strong zero-day signal.">i<span class="tip">Count of entries added to CISA KEV on or before the CVE was published in NVD (age of 0 or negative) - i.e. exploited at or before public disclosure. A strong zero-day signal.</span></span></th>
+          <th class="num">Mean</th>
+          <th class="num">Median</th>
+          <th class="num">Zero-day <span class="info" title="Count of vulnerabilities CISA added to KEV on or before the day they were published in NVD (age 0 or negative) - exploited at or before public disclosure.">i</span></th>
         </tr></thead>
         <tbody><tr><td>Jan 2025</td><td class='num'>14</td><td class='num'>0</td><td class='num'>1730</td><td class='num'>287.6</td><td class='num'><b>5.0</b> </td><td class='num'><b style="color:#FB483D">5</b></td></tr>
 <tr><td>Feb 2025</td><td class='num'>27</td><td class='num'>0</td><td class='num'>2860</td><td class='num'>512.6</td><td class='num'><b>65</b> <span style="color:#FB483D">&uarr;</span></td><td class='num'><b style="color:#FB483D">2</b></td></tr>
@@ -253,9 +245,9 @@
       <table class="detail" id="table2025">
         <thead><tr>
           <th>CVE</th><th>Added</th><th>Published</th>
-          <th class="num">Age (d) <span class="info" tabindex="0" aria-label="Days between NVD publication (first captured) and the date CISA added the CVE to KEV (exploited). Negative means exploited before it was published.">i<span class="tip">Days between NVD publication (first captured) and the date CISA added the CVE to KEV (exploited). Negative means exploited before it was published.</span></span></th>
-          <th>Severity <span class="info" tabindex="0" aria-label="NVD&#x27;s CVSS severity band: Critical (9.0-10), High (7.0-8.9), Medium (4.0-6.9), Low (0.1-3.9).">i<span class="tip">NVD&#x27;s CVSS severity band: Critical (9.0-10), High (7.0-8.9), Medium (4.0-6.9), Low (0.1-3.9).</span></span></th>
-          <th class="num">CVSS <span class="info" tabindex="0" aria-label="Common Vulnerability Scoring System base score, 0-10. Rates how severe a vulnerability is from exploitability and impact. Higher = more dangerous. From the best available NVD metric (v4.0 &amp;gt; v3.1 &amp;gt; v3.0 &amp;gt; v2).">i<span class="tip">Common Vulnerability Scoring System base score, 0-10. Rates how severe a vulnerability is from exploitability and impact. Higher = more dangerous. From the best available NVD metric (v4.0 &amp;gt; v3.1 &amp;gt; v3.0 &amp;gt; v2).</span></span></th>
+          <th class="num">Age (d) <span class="info" title="Days from NVD publication to the date CISA added the CVE to KEV. Negative means it was exploited before it was published.">i</span></th>
+          <th>Severity</th>
+          <th class="num">CVSS <span class="info" title="Common Vulnerability Scoring System base score (0-10): how severe a vulnerability is, from exploitability and impact. Higher = more dangerous. Taken from the best available NVD metric, preferring v4.0, then v3.1, v3.0, v2.">i</span></th>
           <th>Ransom</th><th>Vendor / Product</th><th>Description</th>
         </tr></thead>
         <tbody><tr class="kev-row y2025" data-month="2025-12" data-age="10" data-sev="HIGH" data-cvss="8.7" data-ransom="no" data-vendor="MongoDB" data-vp="mongodb mongodb and mongodb server"><td class='mono'>CVE-2025-14847</td><td>2025-12-29</td><td>2025-12-19</td><td class='num'>10</td><td><span class="badge" style="background:#f2872f22;color:#f2872f;border:1px solid #f2872f55">HIGH</span></td><td class='num'>8.7</td><td>—</td><td>MongoDB MongoDB and MongoDB Server</td><td class='desc'>Mismatched length fields in Zlib compressed protocol headers may allow a read of uninitialized heap memory by an unauthenticated client. This issue affects all MongoDB Server v7.0 prior to 7.0.28 versions, MongoDB Server v8.0 versions prior to 8.0.17, MongoDB Server v8.2 versions prior to 8.2.3, Mon...</td></tr>
@@ -678,9 +670,9 @@ Users are recommended to upgrade to version 18.12.16, which fixes the issue.</td
       <table class="detail" id="table2026">
         <thead><tr>
           <th>CVE</th><th>Added</th><th>Published</th>
-          <th class="num">Age (d) <span class="info" tabindex="0" aria-label="Days between NVD publication (first captured) and the date CISA added the CVE to KEV (exploited). Negative means exploited before it was published.">i<span class="tip">Days between NVD publication (first captured) and the date CISA added the CVE to KEV (exploited). Negative means exploited before it was published.</span></span></th>
-          <th>Severity <span class="info" tabindex="0" aria-label="NVD&#x27;s CVSS severity band: Critical (9.0-10), High (7.0-8.9), Medium (4.0-6.9), Low (0.1-3.9).">i<span class="tip">NVD&#x27;s CVSS severity band: Critical (9.0-10), High (7.0-8.9), Medium (4.0-6.9), Low (0.1-3.9).</span></span></th>
-          <th class="num">CVSS <span class="info" tabindex="0" aria-label="Common Vulnerability Scoring System base score, 0-10. Rates how severe a vulnerability is from exploitability and impact. Higher = more dangerous. From the best available NVD metric (v4.0 &amp;gt; v3.1 &amp;gt; v3.0 &amp;gt; v2).">i<span class="tip">Common Vulnerability Scoring System base score, 0-10. Rates how severe a vulnerability is from exploitability and impact. Higher = more dangerous. From the best available NVD metric (v4.0 &amp;gt; v3.1 &amp;gt; v3.0 &amp;gt; v2).</span></span></th>
+          <th class="num">Age (d) <span class="info" title="Days from NVD publication to the date CISA added the CVE to KEV. Negative means it was exploited before it was published.">i</span></th>
+          <th>Severity</th>
+          <th class="num">CVSS <span class="info" title="Common Vulnerability Scoring System base score (0-10): how severe a vulnerability is, from exploitability and impact. Higher = more dangerous. Taken from the best available NVD metric, preferring v4.0, then v3.1, v3.0, v2.">i</span></th>
           <th>Ransom</th><th>Vendor / Product</th><th>Description</th>
         </tr></thead>
         <tbody><tr class="kev-row y2026" data-month="2026-09" data-age="97" data-sev="HIGH" data-cvss="8.8" data-ransom="no" data-vendor="Zyxel" data-vp="zyxel gs1900 series switches"><td class='mono'>CVE-2026-7273</td><td>2026-09-21</td><td>2026-06-16</td><td class='num'>97</td><td><span class="badge" style="background:#f2872f22;color:#f2872f;border:1px solid #f2872f55">HIGH</span></td><td class='num'>8.8</td><td>—</td><td>Zyxel GS1900 Series Switches</td><td class='desc'>A stack-based buffer overflow vulnerability in the CGI program of Zyxel GS1900-48HPv2 firmware versions through 2.90(ABTQ.1)C0 could allow a LAN-based, unauthenticated attacker to exploit the flaw and potentially execute OS commands via a crafted HTTP request.</td></tr>
