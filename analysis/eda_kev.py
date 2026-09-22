@@ -345,7 +345,7 @@ def _year_section(res: dict) -> str:
     <h2 class="yh">{year}</h2>
     <div class="cards">
       <div class="card"><div class="val">{res['total_kev']}</div><div class="lbl">New KEV entries</div></div>
-      <div class="card"><div class="val">{res['total_new_cve']}</div><div class="lbl">KEV whose CVE was published in {year}</div></div>
+      <div class="card"><div class="val">{res['total_new_cve']}</div><div class="lbl">{year} exploited CVEs (published &amp; in KEV)</div></div>
       <div class="card"><div class="val">{res['total_ransomware']}</div><div class="lbl">Linked to ransomware</div></div>
       <div class="card"><div class="val">{res['median_age']}</div><div class="lbl">Median days: published &rarr; exploited</div></div>
     </div>
@@ -542,7 +542,7 @@ for (const year of {years_js}) {{
   const hasTotals = D.totalCve && D.totalCve.some(v => v != null);
   const countsDatasets = [
     {{ type:'bar', label:'New KEV entries', data:D.newKev, backgroundColor:'{fb.CORE_BLUE}', yAxisID:'y', order:3 }},
-    {{ type:'bar', label:'New CVEs (published that year)', data:D.newCve, backgroundColor:'{fb.ACCENT_BLUE}', yAxisID:'y', order:3 }},
+    {{ type:'bar', label:year+' exploited CVEs', data:D.newCve, backgroundColor:'{fb.ACCENT_BLUE}', yAxisID:'y', order:3 }},
     {{ type:'bar', label:'Ransomware-linked', data:D.ransomware, backgroundColor:'{fb.ACCENT_RED}', yAxisID:'y', order:3 }}
   ];
   if (hasTotals) {{

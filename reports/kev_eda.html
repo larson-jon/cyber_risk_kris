@@ -190,7 +190,7 @@
     <h2 class="yh">2025</h2>
     <div class="cards">
       <div class="card"><div class="val">245</div><div class="lbl">New KEV entries</div></div>
-      <div class="card"><div class="val">197</div><div class="lbl">KEV whose CVE was published in 2025</div></div>
+      <div class="card"><div class="val">197</div><div class="lbl">2025 exploited CVEs (published &amp; in KEV)</div></div>
       <div class="card"><div class="val">31</div><div class="lbl">Linked to ransomware</div></div>
       <div class="card"><div class="val">26</div><div class="lbl">Median days: published &rarr; exploited</div></div>
     </div>
@@ -619,7 +619,7 @@ Users are recommended to upgrade to version 18.12.16, which fixes the issue.</td
     <h2 class="yh">2026</h2>
     <div class="cards">
       <div class="card"><div class="val">233</div><div class="lbl">New KEV entries</div></div>
-      <div class="card"><div class="val">161</div><div class="lbl">KEV whose CVE was published in 2026</div></div>
+      <div class="card"><div class="val">161</div><div class="lbl">2026 exploited CVEs (published &amp; in KEV)</div></div>
       <div class="card"><div class="val">26</div><div class="lbl">Linked to ransomware</div></div>
       <div class="card"><div class="val">15</div><div class="lbl">Median days: published &rarr; exploited</div></div>
     </div>
@@ -1022,7 +1022,7 @@ for (const year of [2025, 2026]) {
   const hasTotals = D.totalCve && D.totalCve.some(v => v != null);
   const countsDatasets = [
     { type:'bar', label:'New KEV entries', data:D.newKev, backgroundColor:'#233E66', yAxisID:'y', order:3 },
-    { type:'bar', label:'New CVEs (published that year)', data:D.newCve, backgroundColor:'#0082D1', yAxisID:'y', order:3 },
+    { type:'bar', label:year+' exploited CVEs', data:D.newCve, backgroundColor:'#0082D1', yAxisID:'y', order:3 },
     { type:'bar', label:'Ransomware-linked', data:D.ransomware, backgroundColor:'#FB483D', yAxisID:'y', order:3 }
   ];
   if (hasTotals) {
