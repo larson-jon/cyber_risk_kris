@@ -61,12 +61,12 @@ def base_css() -> str:
   body {{ margin:0; background:var(--bg); color:var(--body);
     font-family:'Open Sans',-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     font-size:15px; line-height:1.6; }}
+  /* White band carrying the official black FINRA logo. */
+  .logoband {{ background:#fff; padding:18px 40px; }}
+  .logo {{ height:52px; width:auto; display:block; }}
   /* FINRA yellow top rule echoing the brand cover. */
   .brandbar {{ height:6px; background:var(--yellow); }}
-  header.brand {{ background:var(--core); color:#fff; padding:26px 40px 24px; }}
-  .wordmark {{ font-family:'Open Sans',sans-serif; font-weight:800; letter-spacing:.06em;
-    font-size:22px; color:#fff; text-transform:uppercase; }}
-  .wordmark .tm {{ font-size:10px; vertical-align:super; font-weight:600; }}
+  header.brand {{ background:var(--core); color:#fff; padding:24px 40px 24px; }}
   header.brand h1 {{ font-family:'Open Sans',sans-serif; font-weight:800;
     margin:14px 0 4px; font-size:26px; color:#fff; }}
   header.brand .sub {{ color:#cdd8ea; font-size:14px; }}
@@ -107,17 +107,29 @@ def base_css() -> str:
 """
 
 
+# Official FINRA Enterprise Risk Management logo, expected alongside each report
+# (copied into both data/ and reports/). It is the black version, so it sits on
+# a white band per brand guidance (logo must be white/reversed on dark).
+LOGO_FILE = "finra%20logo.png"
+
+
 def brand_header(title: str, subtitle: str = "", tagline: bool = True) -> str:
-    """Return the brand bar + header block (wordmark, title, subtitle)."""
+    """Return the logo band + yellow rule + Core Blue header block.
+
+    The black FINRA logo is placed on a white band (not on the blue) so it stays
+    legible and unaltered, respecting the brand's dark-background rule.
+    """
     tag = (
         '<div class="tagline">Investor protection. Market integrity.</div>'
         if tagline
         else ""
     )
     sub = f'<div class="sub">{subtitle}</div>' if subtitle else ""
-    return f"""<div class="brandbar"></div>
+    return f"""<div class="logoband">
+  <img class="logo" src="{LOGO_FILE}" alt="FINRA Enterprise Risk Management">
+</div>
+<div class="brandbar"></div>
 <header class="brand">
-  <div class="wordmark">FINRA<span class="tm">&reg;</span></div>
   <h1>{title}</h1>
   {sub}
   {tag}

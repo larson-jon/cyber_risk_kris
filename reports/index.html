@@ -16,11 +16,11 @@
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--body);
     font-family:'Open Sans',-apple-system,Segoe UI,Roboto,Arial,sans-serif; font-size:16px; line-height:1.6; }
+  .logoband { background:#fff; padding:18px 40px; }
+  .logo { height:56px; width:auto; display:block; }
   .brandbar { height:6px; background:var(--yellow); }
-  header.brand { background:var(--core); color:#fff; padding:30px 40px 30px; }
-  .wordmark { font-weight:800; letter-spacing:.06em; font-size:22px; text-transform:uppercase; }
-  .wordmark .tm { font-size:10px; vertical-align:super; font-weight:600; }
-  header.brand h1 { font-weight:800; margin:16px 0 6px; font-size:30px; }
+  header.brand { background:var(--core); color:#fff; padding:28px 40px 30px; }
+  header.brand h1 { font-weight:800; margin:0 0 6px; font-size:30px; }
   header.brand .sub { color:#cdd8ea; font-size:15px; }
   header.brand .tagline { color:#9db4d6; font-size:13px; margin-top:10px; font-family:'Lora',Georgia,serif; font-style:italic; }
   main { padding:26px 40px 60px; max-width:1000px; margin:0 auto; }
@@ -44,9 +44,11 @@
 </style>
 </head>
 <body>
+<div class="logoband">
+  <img class="logo" src="finra%20logo.png" alt="FINRA Enterprise Risk Management">
+</div>
 <div class="brandbar"></div>
 <header class="brand">
-  <div class="wordmark">FINRA<span class="tm">&reg;</span></div>
   <h1>Cyber Risk KRIs</h1>
   <div class="sub">Key risk indicators mined from CISA KEV, NIST NVD, and SEC EDGAR 8-K cyber-incident disclosures.</div>
   <div class="tagline">Investor protection. Market integrity.</div>
@@ -92,8 +94,7 @@
 
   <div class="foot">
     Generated for the <a class="repo" href="https://github.com/larson-jon/cyber_risk_kris">cyber_risk_kris</a> project.
-    Styling follows FINRA brand guidelines. The FINRA wordmark shown here is a text placeholder;
-    replace with the official logo artwork before any external distribution.
+    Styling follows FINRA brand guidelines.
   </div>
 </main>
 </body>

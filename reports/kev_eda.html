@@ -19,12 +19,12 @@
   body { margin:0; background:var(--bg); color:var(--body);
     font-family:'Open Sans',-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     font-size:15px; line-height:1.6; }
+  /* White band carrying the official black FINRA logo. */
+  .logoband { background:#fff; padding:18px 40px; }
+  .logo { height:52px; width:auto; display:block; }
   /* FINRA yellow top rule echoing the brand cover. */
   .brandbar { height:6px; background:var(--yellow); }
-  header.brand { background:var(--core); color:#fff; padding:26px 40px 24px; }
-  .wordmark { font-family:'Open Sans',sans-serif; font-weight:800; letter-spacing:.06em;
-    font-size:22px; color:#fff; text-transform:uppercase; }
-  .wordmark .tm { font-size:10px; vertical-align:super; font-weight:600; }
+  header.brand { background:var(--core); color:#fff; padding:24px 40px 24px; }
   header.brand h1 { font-family:'Open Sans',sans-serif; font-weight:800;
     margin:14px 0 4px; font-size:26px; color:#fff; }
   header.brand .sub { color:#cdd8ea; font-size:14px; }
@@ -78,9 +78,11 @@
 </style>
 </head>
 <body>
+<div class="logoband">
+  <img class="logo" src="finra%20logo.png" alt="FINRA Enterprise Risk Management">
+</div>
 <div class="brandbar"></div>
 <header class="brand">
-  <div class="wordmark">FINRA<span class="tm">&reg;</span></div>
   <h1>CISA KEV &times; NVD &mdash; Exploratory Analysis</h1>
   <div class="sub">Source: <code style='background:rgba(255,255,255,.12);color:#fff'>kev_enriched_20260922T165425Z.csv</code> &middot; 1717 total KEV records</div>
   <div class="tagline">Investor protection. Market integrity.</div>
