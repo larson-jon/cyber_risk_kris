@@ -335,8 +335,15 @@ def _year_section(res: dict) -> str:
         "ransomware": [m["ransomware"] for m in active],
         "avgAge": [m["avg_age_days"] for m in active],
         "medAge": [m["median_age_days"] for m in active],
-        # Total CVEs NVD published that month (denominator). None if uncached.
-        "totalCve": [NVD_TOTALS.get(f"{year}-{m['month']:02d}") for m in active],
+        # Published-CVE context that month (denominator), from the NVD cache.
+        # None where uncached, so the lines are omitted for those points.
+        "totalCve": [
+            NVD_TOTALS.get(f"{year}-{m['month']:02d}", {}).get("total") for m in active
+        ],
+        "highCrit": [
+            NVD_TOTALS.get(f"{year}-{m['month']:02d}", {}).get("highCritical")
+            for m in active
+        ],
     }
     detail_rows = _entry_rows_html(res["entries"], year)
     filter_bar = _filter_bar(year, res["entries"])
@@ -353,9 +360,10 @@ def _year_section(res: dict) -> str:
       <h3>Exploited vs. total published CVEs, by month</h3>
       <canvas id="counts{year}"></canvas>
       <div class="note">Bars (left axis) are exploited-vulnerability counts: KEV entries added and, of those,
-        how many were first published that year. The line (right axis) is the <b>total CVEs NVD published
-        that month</b> &mdash; the denominator. Only a tiny fraction of published CVEs are ever exploited,
-        so the bars stay near zero while the line runs into the thousands.</div>
+        how many were first published that year. The lines (right axis) are the <b>total CVEs published</b>
+        and the <b>High/Critical-severity CVEs published</b> that month &mdash; the denominators. Even
+        against just the High/Critical population (hundreds to ~1,300 a month), the exploited bars stay
+        near zero: only a tiny fraction of severe CVEs are ever weaponized.</div>
     </div>
     <div class="panel">
       <h3>Age: first captured (NVD published) &rarr; exploited (KEV added)</h3>
@@ -550,6 +558,12 @@ for (const year of {years_js}) {{
       borderColor:'{fb.ACCENT_GREEN}', backgroundColor:'{fb.ACCENT_GREEN}22', borderWidth:2.5,
       tension:.3, yAxisID:'y1', order:1, pointRadius:2 }});
   }}
+  const hasHC = D.highCrit && D.highCrit.some(v => v != null);
+  if (hasHC) {{
+    countsDatasets.push({{ type:'line', label:'High/Critical CVEs published', data:D.highCrit,
+      borderColor:'#f2872f', backgroundColor:'#f2872f22', borderWidth:2.5, borderDash:[5,4],
+      tension:.3, yAxisID:'y1', order:2, pointRadius:2 }});
+  }}
   new Chart(document.getElementById('counts'+year), {{
     data:{{ labels:D.labels, datasets:countsDatasets }},
     options:{{ responsive:true,
@@ -557,8 +571,8 @@ for (const year of {years_js}) {{
         x:{{ grid:{{color:grid}} }},
         y:{{ position:'left', grid:{{color:grid}}, beginAtZero:true,
           title:{{display:true,text:'exploited (KEV) count'}} }},
-        y1:{{ position:'right', display:hasTotals, beginAtZero:true, grid:{{drawOnChartArea:false}},
-          title:{{display:true,text:'total CVEs published'}} }}
+        y1:{{ position:'right', display:(hasTotals||hasHC), beginAtZero:true, grid:{{drawOnChartArea:false}},
+          title:{{display:true,text:'CVEs published (right axis)'}} }}
       }},
       plugins:{{ legend:{{position:'bottom'}} }} }}
   }});

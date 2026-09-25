@@ -85,24 +85,28 @@ class NvdClient:
 
     def iter_cves(
         self,
-        last_mod_start: datetime | None = None,
-        last_mod_end: datetime | None = None,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        date_field: str = "lastMod",
         extra_params: dict | None = None,
     ) -> Iterator[dict]:
         """Yield individual CVE records, transparently handling pagination.
 
-        If ``last_mod_start``/``last_mod_end`` are given, only CVEs modified in
-        that window are returned. The window must not exceed 120 days; use
-        :meth:`iter_cves_windowed` for larger backfills.
+        ``date_field`` selects which NVD date filter to apply:
+        ``"lastMod"`` -> ``lastModStartDate``/``lastModEndDate`` (default), or
+        ``"pub"`` -> ``pubStartDate``/``pubEndDate`` (publication date).
+        The window must not exceed 120 days; use :meth:`iter_cves_windowed`
+        for larger ranges.
         """
         params: dict = {"resultsPerPage": self.results_per_page, "startIndex": 0}
         if extra_params:
             params.update(extra_params)
 
-        if last_mod_start and last_mod_end:
-            _validate_date_range(last_mod_start, last_mod_end)
-            params["lastModStartDate"] = _format_nvd_datetime(last_mod_start)
-            params["lastModEndDate"] = _format_nvd_datetime(last_mod_end)
+        if start and end:
+            _validate_date_range(start, end)
+            prefix = "pub" if date_field == "pub" else "lastMod"
+            params[f"{prefix}StartDate"] = _format_nvd_datetime(start)
+            params[f"{prefix}EndDate"] = _format_nvd_datetime(end)
 
         start_index = 0
         total_results: int | None = None
@@ -130,18 +134,24 @@ class NvdClient:
 
     def iter_cves_windowed(
         self,
-        last_mod_start: datetime,
-        last_mod_end: datetime,
+        start: datetime,
+        end: datetime,
+        date_field: str = "lastMod",
         window_days: int = MAX_DATE_RANGE_DAYS,
     ) -> Iterator[dict]:
-        """Backfill across ranges larger than 120 days by chunking the window."""
+        """Backfill across ranges larger than 120 days by chunking the window.
+
+        ``date_field`` is ``"lastMod"`` (default) or ``"pub"``.
+        """
         window_days = min(window_days, MAX_DATE_RANGE_DAYS)
-        cursor = last_mod_start
-        while cursor < last_mod_end:
-            chunk_end = min(cursor + timedelta(days=window_days), last_mod_end)
-            logger.info("NVD window %s -> %s", cursor.date(), chunk_end.date())
+        cursor = start
+        while cursor < end:
+            chunk_end = min(cursor + timedelta(days=window_days), end)
+            logger.info(
+                "NVD %s window %s -> %s", date_field, cursor.date(), chunk_end.date()
+            )
             yield from self.iter_cves(
-                last_mod_start=cursor, last_mod_end=chunk_end
+                start=cursor, end=chunk_end, date_field=date_field
             )
             cursor = chunk_end
 

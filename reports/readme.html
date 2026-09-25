@@ -139,6 +139,9 @@ python -m collectors.cli nvd --last-days 7
 # CVEs modified in an explicit range (auto-chunked into &lt;=120-day windows)
 python -m collectors.cli nvd --start 2024-01-01 --end 2024-06-01
 
+# All CVEs *published* in a range, with severity (full population, not just exploited)
+python -m collectors.cli nvd --pub-start 2025-01-01 --pub-end 2025-12-31
+
 # Both sources at once
 python -m collectors.cli all --last-days 7
 
@@ -215,7 +218,7 @@ python -m collectors.cli edgar --item 1.05 --no-descriptions     # skip narrativ
 </ul>
 <p>By default these write into <code>data/</code> (gitignored). Shareable snapshots are kept in <code>reports/</code>, with <code>reports/index.html</code> as a landing page linking both. To refresh the committed snapshots after new data pulls, regenerate the reports and copy the HTML into <code>reports/</code>.</p>
 <p><code>analysis/readme_html.py</code> renders this README as a FINRA-branded <code>reports/readme.html</code>, linked from the landing page. Re-run it after editing the README to refresh the HTML docs.</p>
-<p><code>analysis/nvd_monthly_totals.py</code> fetches the <strong>total</strong> number of CVEs NVD published per month (the denominator the KEV-only data can&#x27;t provide) and caches it to <code>data/nvd_monthly_totals.json</code>. The KEV report plots this as a secondary-axis line so exploited counts can be read against total published volume — e.g. ~12,700 CVEs published in a month vs. ~30 added to KEV. Run <code>python analysis/nvd_monthly_totals.py 2025 2026</code> to (re)build the cache.</p>
+<p><code>analysis/nvd_monthly_totals.py</code> fetches per-month published-CVE counts — both the <strong>total</strong> and the <strong>High/Critical</strong> subset (the denominators the KEV-only data can&#x27;t provide) — and caches them to <code>data/nvd_monthly_totals.json</code> as <code>{&quot;2025-01&quot;: {&quot;total&quot;: N, &quot;highCritical&quot;: M}, ...}</code>. The KEV report plots both as secondary-axis lines so exploited counts can be read against published volume — e.g. a month with ~12,700 CVEs published (~800 High/Critical) vs. ~30 added to KEV. Run <code>python analysis/nvd_monthly_totals.py 2025 2026</code> to (re)build the cache.</p>
 <h2>Extending</h2>
 <p>To add a new source, create <code>collectors/&lt;source&gt;.py</code> with a small client class that reuses <code>build_session()</code> from <code>http_client.py</code>, then wire a subcommand into <code>cli.py</code>.</p>
   </div>

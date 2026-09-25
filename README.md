@@ -53,6 +53,9 @@ python -m collectors.cli nvd --last-days 7
 # CVEs modified in an explicit range (auto-chunked into <=120-day windows)
 python -m collectors.cli nvd --start 2024-01-01 --end 2024-06-01
 
+# All CVEs *published* in a range, with severity (full population, not just exploited)
+python -m collectors.cli nvd --pub-start 2025-01-01 --pub-end 2025-12-31
+
 # Both sources at once
 python -m collectors.cli all --last-days 7
 
@@ -159,7 +162,7 @@ By default these write into `data/` (gitignored). Shareable snapshots are kept i
 
 `analysis/readme_html.py` renders this README as a FINRA-branded `reports/readme.html`, linked from the landing page. Re-run it after editing the README to refresh the HTML docs.
 
-`analysis/nvd_monthly_totals.py` fetches the **total** number of CVEs NVD published per month (the denominator the KEV-only data can't provide) and caches it to `data/nvd_monthly_totals.json`. The KEV report plots this as a secondary-axis line so exploited counts can be read against total published volume — e.g. ~12,700 CVEs published in a month vs. ~30 added to KEV. Run `python analysis/nvd_monthly_totals.py 2025 2026` to (re)build the cache.
+`analysis/nvd_monthly_totals.py` fetches per-month published-CVE counts — both the **total** and the **High/Critical** subset (the denominators the KEV-only data can't provide) — and caches them to `data/nvd_monthly_totals.json` as `{"2025-01": {"total": N, "highCritical": M}, ...}`. The KEV report plots both as secondary-axis lines so exploited counts can be read against published volume — e.g. a month with ~12,700 CVEs published (~800 High/Critical) vs. ~30 added to KEV. Run `python analysis/nvd_monthly_totals.py 2025 2026` to (re)build the cache.
 
 ## Extending
 

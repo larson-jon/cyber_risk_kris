@@ -105,8 +105,16 @@ def run_nvd(config: Config, args: argparse.Namespace) -> list[Path]:
 
     start: datetime | None = None
     end: datetime | None = None
+    date_field = "lastMod"
 
-    if args.last_days is not None:
+    pub_start = getattr(args, "pub_start", None)
+    pub_end = getattr(args, "pub_end", None)
+
+    if pub_start or pub_end:
+        if not (pub_start and pub_end):
+            raise SystemExit("--pub-start and --pub-end must be provided together")
+        start, end, date_field = pub_start, pub_end, "pub"
+    elif args.last_days is not None:
         end = datetime.now(timezone.utc)
         start = end - timedelta(days=args.last_days)
     elif args.start or args.end:
@@ -115,7 +123,7 @@ def run_nvd(config: Config, args: argparse.Namespace) -> list[Path]:
         start, end = args.start, args.end
 
     if start and end:
-        records = list(client.iter_cves_windowed(start, end))
+        records = list(client.iter_cves_windowed(start, end, date_field=date_field))
     else:
         # No date filter: pull the entire dataset (large; use with care).
         logger.warning(
@@ -410,6 +418,19 @@ def _add_nvd_args(p: argparse.ArgumentParser) -> None:
         type=_parse_date,
         default=None,
         help="End of lastModified range (YYYY-MM-DD or ISO-8601).",
+    )
+    p.add_argument(
+        "--pub-start",
+        type=_parse_date,
+        default=None,
+        help="Start of publication-date range (YYYY-MM-DD). Pulls CVEs *published* "
+        "in the window; auto-chunked into <=120-day windows. Use with --pub-end.",
+    )
+    p.add_argument(
+        "--pub-end",
+        type=_parse_date,
+        default=None,
+        help="End of publication-date range (YYYY-MM-DD). Use with --pub-start.",
     )
 
 
