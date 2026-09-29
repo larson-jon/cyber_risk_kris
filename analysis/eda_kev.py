@@ -75,6 +75,7 @@ def _truncate(text: str, limit: int = 240) -> str:
 def compute_year(rows: list[dict], year: int) -> dict:
     new_kev = defaultdict(int)
     new_cve = defaultdict(int)
+    high_crit_kev = defaultdict(int)
     ages_by_month = defaultdict(list)
     ransomware = defaultdict(int)
     entries: list[dict] = []
@@ -89,6 +90,8 @@ def compute_year(rows: list[dict], year: int) -> dict:
         if added and added.year == year:
             m = added.month
             new_kev[m] += 1
+            if (r.get("cvss_base_severity") or "").strip().upper() in ("HIGH", "CRITICAL"):
+                high_crit_kev[m] += 1
             if r.get("known_ransomware_campaign_use", "").strip().lower() == "known":
                 ransomware[m] += 1
             age = (added - published).days if published else None
@@ -120,6 +123,7 @@ def compute_year(rows: list[dict], year: int) -> dict:
                 "month": i,
                 "new_kev": new_kev.get(i, 0),
                 "new_cve": new_cve.get(i, 0),
+                "high_crit_kev": high_crit_kev.get(i, 0),
                 "ransomware": ransomware.get(i, 0),
                 "min_age_days": min(ages) if ages else None,
                 "max_age_days": max(ages) if ages else None,
@@ -328,9 +332,14 @@ def _filter_bar(year: int, entries: list[dict]) -> str:
 def _year_section(res: dict) -> str:
     year = res["year"]
     active = _active(res["monthly"])
+    prior_kev = res.get("prior_new_kev", {})
     chart_data = {
         "labels": [m["label"] for m in active],
         "newKev": [m["new_kev"] for m in active],
+        # Same month in the prior year, for a year-over-year comparison bar.
+        "priorKev": [prior_kev.get(m["month"], 0) for m in active],
+        # Of this month's new KEV entries, how many are High/Critical severity.
+        "highCritKev": [m["high_crit_kev"] for m in active],
         "newCve": [m["new_cve"] for m in active],
         "ransomware": [m["ransomware"] for m in active],
         "avgAge": [m["avg_age_days"] for m in active],
@@ -357,13 +366,13 @@ def _year_section(res: dict) -> str:
       <div class="card"><div class="val">{res['median_age']}</div><div class="lbl">Median days: published &rarr; exploited</div></div>
     </div>
     <div class="panel">
-      <h3>Exploited vs. total published CVEs, by month</h3>
+      <h3>New KEV entries by month &mdash; with prior-year and severity context</h3>
       <canvas id="counts{year}"></canvas>
-      <div class="note">Bars (left axis) are exploited-vulnerability counts: KEV entries added and, of those,
-        how many were first published that year. The lines (right axis) are the <b>total CVEs published</b>
-        and the <b>High/Critical-severity CVEs published</b> that month &mdash; the denominators. Even
-        against just the High/Critical population (hundreds to ~1,300 a month), the exploited bars stay
-        near zero: only a tiny fraction of severe CVEs are ever weaponized.</div>
+      <div class="note">Bars (left axis): <b>new KEV entries</b> this month, the <b>same month in {res.get('prior_year', year - 1)}</b>
+        for year-over-year comparison, and (red) how many of this month's entries are <b>High/Critical severity</b>.
+        Lines (right axis) give the published-CVE denominators &mdash; <b>total</b> and <b>High/Critical</b> CVEs
+        NVD published that month. Even against the High/Critical population (hundreds to ~1,300/month), the exploited
+        bars stay low: only a small fraction of severe CVEs are ever weaponized.</div>
     </div>
     <div class="panel">
       <h3>Age: first captured (NVD published) &rarr; exploited (KEV added)</h3>
@@ -549,9 +558,9 @@ for (const year of {years_js}) {{
   const D = CHART_DATA[year];
   const hasTotals = D.totalCve && D.totalCve.some(v => v != null);
   const countsDatasets = [
-    {{ type:'bar', label:'New KEV entries', data:D.newKev, backgroundColor:'{fb.CORE_BLUE}', yAxisID:'y', order:3 }},
-    {{ type:'bar', label:year+' exploited CVEs', data:D.newCve, backgroundColor:'{fb.ACCENT_BLUE}', yAxisID:'y', order:3 }},
-    {{ type:'bar', label:'Ransomware-linked', data:D.ransomware, backgroundColor:'{fb.ACCENT_RED}', yAxisID:'y', order:3 }}
+    {{ type:'bar', label:'New KEV entries ('+year+')', data:D.newKev, backgroundColor:'{fb.CORE_BLUE}', yAxisID:'y', order:3 }},
+    {{ type:'bar', label:'New KEV entries ('+(year-1)+', same month)', data:D.priorKev, backgroundColor:'{fb.ACCENT_GRAY}', yAxisID:'y', order:3 }},
+    {{ type:'bar', label:'High/Critical exploited (KEV)', data:D.highCritKev, backgroundColor:'{fb.ACCENT_RED}', yAxisID:'y', order:3 }}
   ];
   if (hasTotals) {{
     countsDatasets.push({{ type:'line', label:'Total CVEs published (all NVD)', data:D.totalCve,
@@ -668,6 +677,14 @@ def write_report() -> Path:
     src = _latest_enriched()
     rows = load_rows(src)
     results = [compute_year(rows, y) for y in YEARS]
+
+    # Attach each displayed year's prior-year monthly new-KEV counts (month index
+    # 1-12 -> count) for the same-month year-over-year comparison bar.
+    for res in results:
+        prior = compute_year(rows, res["year"] - 1)
+        res["prior_year"] = res["year"] - 1
+        res["prior_new_kev"] = {m["month"]: m["new_kev"] for m in prior["monthly"]}
+
     print_summary(results, src.name, len(rows))
 
     series = build_age_stats_series(results)
