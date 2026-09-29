@@ -558,10 +558,13 @@ const grid="{fb.LINE}", muted="{fb.ACCENT_GRAY}";
 for (const year of {years_js}) {{
   const D = CHART_DATA[year];
   const hasTotals = D.totalCve && D.totalCve.some(v => v != null);
+  // Chart.js draws LOWER order on top. Lines get the lowest orders so they sit
+  // in front of the bars; bars keep their left-to-right grouping (3,4,5).
+  // Legend order follows dataset array order, not `order`, so it is unaffected.
   const countsDatasets = [
     {{ type:'bar', label:'New KEV entries ('+year+')', data:D.newKev, backgroundColor:'{fb.CORE_BLUE}', yAxisID:'y', order:3 }},
-    {{ type:'bar', label:'New KEV entries ('+(year-1)+')', data:D.priorKev, backgroundColor:'{fb.ACCENT_GRAY}', yAxisID:'y', order:3 }},
-    {{ type:'bar', label:'High/Critical new KEV entries ('+year+')', data:D.highCritKev, backgroundColor:'{fb.ACCENT_RED}', yAxisID:'y', order:3 }}
+    {{ type:'bar', label:'New KEV entries ('+(year-1)+')', data:D.priorKev, backgroundColor:'{fb.ACCENT_GRAY}', yAxisID:'y', order:4 }},
+    {{ type:'bar', label:'High/Critical new KEV entries ('+year+')', data:D.highCritKev, backgroundColor:'{fb.ACCENT_RED}', yAxisID:'y', order:5 }}
   ];
   if (hasTotals) {{
     countsDatasets.push({{ type:'line', label:'Total CVEs published (all NVD)', data:D.totalCve,
@@ -584,7 +587,8 @@ for (const year of {years_js}) {{
         y1:{{ position:'right', display:(hasTotals||hasHC), beginAtZero:true, grid:{{drawOnChartArea:false}},
           title:{{display:true,text:'CVEs published (right axis)'}} }}
       }},
-      plugins:{{ legend:{{position:'bottom'}} }} }}
+      plugins:{{ legend:{{ position:'bottom',
+        labels:{{ usePointStyle:false, boxWidth:14, boxHeight:14, padding:14, sort:null }} }} }} }}
   }});
   new Chart(document.getElementById('age'+year), {{
     type:'line',
