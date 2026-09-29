@@ -197,8 +197,9 @@
     <div class="panel">
       <h3>New KEV entries by month &mdash; with prior-year and severity context</h3>
       <canvas id="counts2025"></canvas>
-      <div class="note">Bars (left axis): <b>new KEV entries</b> this month, the <b>same month in 2024</b>
-        for year-over-year comparison, and (red) how many of this month's entries are <b>High/Critical severity</b>.
+      <div class="note">Bars (left axis): <b>new KEV entries</b> this month, new KEV entries for the same month in
+        <b>2024</b> (year-over-year comparison), and (red) how many of this month's
+        entries are <b>High/Critical severity</b>.
         Lines (right axis) give the published-CVE denominators &mdash; <b>total</b> and <b>High/Critical</b> CVEs
         NVD published that month. Even against the High/Critical population (hundreds to ~1,300/month), the exploited
         bars stay low: only a small fraction of severe CVEs are ever weaponized.</div>
@@ -627,8 +628,9 @@ Users are recommended to upgrade to version 18.12.16, which fixes the issue.</td
     <div class="panel">
       <h3>New KEV entries by month &mdash; with prior-year and severity context</h3>
       <canvas id="counts2026"></canvas>
-      <div class="note">Bars (left axis): <b>new KEV entries</b> this month, the <b>same month in 2025</b>
-        for year-over-year comparison, and (red) how many of this month's entries are <b>High/Critical severity</b>.
+      <div class="note">Bars (left axis): <b>new KEV entries</b> this month, new KEV entries for the same month in
+        <b>2025</b> (year-over-year comparison), and (red) how many of this month's
+        entries are <b>High/Critical severity</b>.
         Lines (right axis) give the published-CVE denominators &mdash; <b>total</b> and <b>High/Critical</b> CVEs
         NVD published that month. Even against the High/Critical population (hundreds to ~1,300/month), the exploited
         bars stay low: only a small fraction of severe CVEs are ever weaponized.</div>
@@ -1024,8 +1026,8 @@ for (const year of [2025, 2026]) {
   const hasTotals = D.totalCve && D.totalCve.some(v => v != null);
   const countsDatasets = [
     { type:'bar', label:'New KEV entries ('+year+')', data:D.newKev, backgroundColor:'#233E66', yAxisID:'y', order:3 },
-    { type:'bar', label:'New KEV entries ('+(year-1)+', same month)', data:D.priorKev, backgroundColor:'#595959', yAxisID:'y', order:3 },
-    { type:'bar', label:'High/Critical exploited (KEV)', data:D.highCritKev, backgroundColor:'#FB483D', yAxisID:'y', order:3 }
+    { type:'bar', label:'New KEV entries ('+(year-1)+')', data:D.priorKev, backgroundColor:'#595959', yAxisID:'y', order:3 },
+    { type:'bar', label:'High/Critical new KEV entries ('+year+')', data:D.highCritKev, backgroundColor:'#FB483D', yAxisID:'y', order:3 }
   ];
   if (hasTotals) {
     countsDatasets.push({ type:'line', label:'Total CVEs published (all NVD)', data:D.totalCve,

@@ -368,8 +368,9 @@ def _year_section(res: dict) -> str:
     <div class="panel">
       <h3>New KEV entries by month &mdash; with prior-year and severity context</h3>
       <canvas id="counts{year}"></canvas>
-      <div class="note">Bars (left axis): <b>new KEV entries</b> this month, the <b>same month in {res.get('prior_year', year - 1)}</b>
-        for year-over-year comparison, and (red) how many of this month's entries are <b>High/Critical severity</b>.
+      <div class="note">Bars (left axis): <b>new KEV entries</b> this month, new KEV entries for the same month in
+        <b>{res.get('prior_year', year - 1)}</b> (year-over-year comparison), and (red) how many of this month's
+        entries are <b>High/Critical severity</b>.
         Lines (right axis) give the published-CVE denominators &mdash; <b>total</b> and <b>High/Critical</b> CVEs
         NVD published that month. Even against the High/Critical population (hundreds to ~1,300/month), the exploited
         bars stay low: only a small fraction of severe CVEs are ever weaponized.</div>
@@ -559,8 +560,8 @@ for (const year of {years_js}) {{
   const hasTotals = D.totalCve && D.totalCve.some(v => v != null);
   const countsDatasets = [
     {{ type:'bar', label:'New KEV entries ('+year+')', data:D.newKev, backgroundColor:'{fb.CORE_BLUE}', yAxisID:'y', order:3 }},
-    {{ type:'bar', label:'New KEV entries ('+(year-1)+', same month)', data:D.priorKev, backgroundColor:'{fb.ACCENT_GRAY}', yAxisID:'y', order:3 }},
-    {{ type:'bar', label:'High/Critical exploited (KEV)', data:D.highCritKev, backgroundColor:'{fb.ACCENT_RED}', yAxisID:'y', order:3 }}
+    {{ type:'bar', label:'New KEV entries ('+(year-1)+')', data:D.priorKev, backgroundColor:'{fb.ACCENT_GRAY}', yAxisID:'y', order:3 }},
+    {{ type:'bar', label:'High/Critical new KEV entries ('+year+')', data:D.highCritKev, backgroundColor:'{fb.ACCENT_RED}', yAxisID:'y', order:3 }}
   ];
   if (hasTotals) {{
     countsDatasets.push({{ type:'line', label:'Total CVEs published (all NVD)', data:D.totalCve,
