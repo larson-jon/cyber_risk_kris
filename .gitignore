@@ -18,6 +18,9 @@ data/*
 !data/nvd_monthly_totals.json
 *.log
 
+# Generated deliverables (slide decks, exports) - never published to the repo.
+output/
+
 # OS / editor
 .DS_Store
 Thumbs.db
